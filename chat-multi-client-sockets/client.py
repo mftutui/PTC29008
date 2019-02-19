@@ -6,15 +6,17 @@ def display():
 	sys.stdout.flush()
 
 def private_message(user,msg):
-    sys.stdout.write("\33[34m\33["+user+": \33[0m"+msg)  
+    print "Private message for you!"
+    msg = "\33[34m\33[ "+ user+": \33[0m"+msg
+    sys.stdout.write(msg)  
     sys.stdout.flush()
 
 def main():
     host = "localhost"
-    port = 5001
+    port = 5002
     name = ""
 
-    name = raw_input("\33[34m\33[1m Enter username: \33[0m")
+    name = raw_input("\33[34m\33[1mEnter username: \33[0m")
 
     while (name is None) or (str(name).strip() == ""):
 	    print ("\r\33[31m\33[1m Username is empty \n\33[0m")
@@ -27,7 +29,7 @@ def main():
         client_socket.connect((host, port))
     except :
         print "\33[31m\33[1m Can't connect to the server \33[0m"
-        sys.exit()
+        sys.exit() 
 
     client_socket.send(name)
     display()
@@ -41,10 +43,11 @@ def main():
             if sock == client_socket:
                 data = sock.recv(4096)
                 if not data :
-                    print '\33[31m\33[1m \r YOU ARE DISCONNECTED!!\n \33[0m'
+                    print '\33[31m\33[1m \rYOU ARE DISCONNECTED!!\n \33[0m'
                     sys.exit()
                 elif "private" in data:
                     name_p = data[data.find(";"):data.find(":")]
+                    print name_p
                     msg = data[data.find(":")+1:]
                     private_message(name_p,msg)
                 else:
