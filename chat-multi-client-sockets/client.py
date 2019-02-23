@@ -1,7 +1,7 @@
 import socket, select, string, sys
 
 def display():
-	you = "\33[33m\33[1m"+" You: "+"\33[0m"
+	you = "\33[33m\33[1m"+"You: "+"\33[0m"
 	sys.stdout.write(you)
 	sys.stdout.flush()
 
@@ -47,11 +47,11 @@ def main():
                 if not data :
                     print '\33[31m\33[1m \rYOU ARE DISCONNECTED!!\n \33[0m'
                     sys.exit()
-                elif "private" in data:
-                    name_p = data[data.find(";"):data.find(":")]
-                    print name_p
-                    msg = data[data.find(":")+1:]
-                    private_message(name_p,msg)
+                #elif "private" in data:
+                    #name_p = data[data.find(";"):data.find(":")]
+                    #print name_p
+                    #msg = data[data.find(":")+1:]
+                    #private_message(name_p,msg)
                 else:
                     sys.stdout.write(data)
                     display()
