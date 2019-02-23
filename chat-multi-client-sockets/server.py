@@ -119,21 +119,6 @@ if __name__ == "__main__":
 
 					elif "p." in data:
 						private_msg(data, sock, suport)
-						#if (data.find(";") != -1) and (data.find(":") != -1):
-							#name_p = data[data.find(";")+1:data.find(":")]
-							#for addr, id_name in suport.items():
-								#if str(id_name) == name_p:
-									#msg = data[data.find(":")+1:]
-									#server status msg
-									#print "Client (%s, %s) " % (ip,port),"[",record[(ip,port)],"] sending a private message to: [ %s ]" % name_p
-									#addr[1].send("private;"+record[(ip,port)]+":"+msg)
-									#continue	
-								#else:
-									#sock.send("\r\33[1m"+"\33[31mThe user "+addr[1]+" is not connected\n\33[0m")
-									#continue
-							#continue	
-						#else:
-							#private_msg(sock)
 
 					elif data == "show users":
 						show_users(sock, suport, record[(ip,port)])
@@ -142,7 +127,7 @@ if __name__ == "__main__":
 						send_to_all(sock,msg)
                 # crt+c exit
 				except:
-					print "-------------------------DEU MERDA-------------------------"
+					print "-------------------------XXXXXXXXXX-------------------------"
 					(ip,port) = sock.getpeername()
 					send_to_all(sock, "\r\33[31m \33[1m"+record[(ip,port)]+" left the conversation unexpectedly\33[0m\n")
 

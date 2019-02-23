@@ -47,11 +47,6 @@ def main():
                 if not data :
                     print '\33[31m\33[1m \rYOU ARE DISCONNECTED!!\n \33[0m'
                     sys.exit()
-                #elif "private" in data:
-                    #name_p = data[data.find(";"):data.find(":")]
-                    #print name_p
-                    #msg = data[data.find(":")+1:]
-                    #private_message(name_p,msg)
                 else:
                     sys.stdout.write(data)
                     display()
@@ -62,5 +57,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    # se eu mandar uma mensagem para privada para um usuario que n existe
