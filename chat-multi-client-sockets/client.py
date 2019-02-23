@@ -11,17 +11,19 @@ def private_message(user,msg):
     sys.stdout.write(msg)  
     sys.stdout.flush()
 
+def name_empty():
+    name = raw_input("\33[34m\33[1mEnter username: \33[0m")
+    while (name is None) or (str(name).strip() == ""):
+	    print ("\33[31m\33[1mUsername is empty!\33[0m")
+            name = raw_input("\33[34m\33[1mEnter username: \33[0m")
+    return name
+
 def main():
     host = "localhost"
-    port = 5002
-    name = ""
+    port = 5003
 
-    name = raw_input("\33[34m\33[1mEnter username: \33[0m")
-
-    while (name is None) or (str(name).strip() == ""):
-	    print ("\r\33[31m\33[1m Username is empty \n\33[0m")
-            name = raw_input("\33[34m\33[1m Enter username: \33[0m")
-
+    name = name_empty()
+    
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.settimeout(2)
         
@@ -60,3 +62,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    # se eu mandar uma mensagem para privada para um usuario que n existe

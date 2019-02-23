@@ -12,6 +12,24 @@ def send_to_all (sock, message):
 def private_msg(sock):
 	sock.send("\r\33[31m\33[1m Not the right sintaxe! \n To send a private message:'private;USERNAME:msgContent'\n \33[0m")
 
+#check if the name is already on record dict
+def name_list():
+	if name not in record.values():
+		record[addr] = name
+		suport[addr,conn] = name
+
+		#server status msg
+		print "Client (%s, %s) connected" % addr,"[",record[addr],"]" 
+
+		conn.send("\33[32m\r\33[1m Welcome to chat room. Enter 'exit' anytime to left the chat\n\33[0m") 
+		send_to_all(conn, "\33[32m\33[1m The user \33[34m\33[1m"+name+"\33[0m \33[32m\33[1mjoined the conversation \n\33[0m")
+	else:
+		conn.send("\r\33[31m\33[1mUsername already taken!\n\33[0m")
+		del record[addr]
+		del suport[addr,conn]
+		connected_list.remove(conn)
+		conn.close()
+
 if __name__ == "__main__":
 	name = ""
 	#dictionary to store address corresponding to username
@@ -22,7 +40,7 @@ if __name__ == "__main__":
 
 	#time used on recv
 	buffer = 4096 
-	port = 5002
+	port = 5003
 
 	server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	server_socket.bind(("localhost", port))
@@ -47,24 +65,7 @@ if __name__ == "__main__":
 				record[addr] = ""
 				suport[addr,conn] = ""
 
-				#add name and address
-				if name not in record.values():
-					record[addr] = name
-					suport[addr,conn] = name
-
-					#server status msg
-					print "Client (%s, %s) connected" % addr,"[",record[addr],"]" 
-
-					conn.send("\33[32m\r\33[1m Welcome to chat room. Enter 'exit' anytime to left the chat\n\33[0m") 
-					send_to_all(conn, "\33[32m\33[1m The user \33[34m\33[1m"+name+"\33[0m \33[32m\33[1mjoined the conversation \n\33[0m")
-				else:
-					#name already on record dict
-					conn.send("\r\33[31m\33[1mUsername already taken!\n\33[0m")
-					del record[addr]
-					del suport[addr,conn]
-					connected_list.remove(conn)
-					conn.close()
-					continue
+				name_list()
 
 			#data from client
 			else:
@@ -103,12 +104,13 @@ if __name__ == "__main__":
 							for addr, id_name in suport.items():
 								if str(id_name) == name_p:
 									msg = data[data.find(":")+1:]
-
 									#server status msg
 									print "Client (%s, %s) " % (ip,port),"[",record[(ip,port)],"] sending a private message to: [ %s ]" % name_p
-									
 									addr[1].send("private;"+record[(ip,port)]+":"+msg)
 									continue	
+								else:
+									sock.send("\r\33[1m"+"\33[31mThe user "+addr[1]+" is not connected\n\33[0m")
+									continue
 							continue	
 						else:
 							private_msg(sock)
@@ -130,3 +132,6 @@ if __name__ == "__main__":
 					continue
 
 	server_socket.close()
+
+	# pensar em uma forma de pedir para digitar o nome novamente se ja estiver na lista e nao derrubar a conexao
+	# tratar dados igual a nada
