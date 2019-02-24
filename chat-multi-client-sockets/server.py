@@ -9,7 +9,7 @@ def send_to_all (sock, message):
 				socket.close()
 				connected_list.remove(socket)
 
-def private_guide(sock):
+def private_guide():
 	sock.send("\r\33[31m\33[1mWrong sintaxe! \n To send a private message use:\33[0m \33[34m\33[1m'p.USERNAME:msgContent'\n\33[0m")
 
 def check_name_list():
@@ -39,7 +39,12 @@ def show_users(sock, suport, your_name):
 		sock.send("\33[31m\r\33[1mThere are no users connected besides you.\n\33[0m")
 
 def private_msg(data, sock, suport):
+	print "data que chegou: ", data
+	print data.find(".") + "\n"
+	print data.find(":") + "\n"	
+	print "agora chegou no IF"
 	i = 0
+	
 	if (data.find(".") != -1) and (data.find(":") != -1):
 		name_p = data[data.find(".")+1:data.find(":")]
 		for addr, id_name in suport.items():
@@ -49,7 +54,7 @@ def private_msg(data, sock, suport):
 		if i == 1:
 			msg = data[data.find(":")+1:]
 			print "Client (%s, %s) " % (ip,port),"[",record[(ip,port)],"] sending a private message to: [ %s ]" % name_p
-			addr_p[1].send("\33[34m\r\33[1mPrivate message from: "+record[(ip,port)]+"\33[0m "+msg+ "\n")	
+			addr_p[1].send("\33[34m\r\33[1mPrivate message from "+record[(ip,port)]+"\33[0m:"+msg+ "\n")	
 		else:
 			sock.send("\33[31m\r\33[1m The user \33[34m\33[1m"+name_p+"\33[0m \33[31m\33[1mis not connected. \n\33[0m")
 	else:
@@ -66,7 +71,7 @@ if __name__ == "__main__":
 
 	#time used on recv
 	buffer = 4096 
-	port = 5003
+	port = 5002
 
 	server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	server_socket.bind(("localhost", port))
@@ -87,10 +92,9 @@ if __name__ == "__main__":
 				#infos
 				conn, addr = server_socket.accept() 
 				name = conn.recv(buffer)
-				connected_list.append(conn)
+				connected_list.append(conn) 
 				record[addr] = ""
 				suport[addr,conn] = ""
-
 				check_name_list()
 
 			#data from client
@@ -113,19 +117,15 @@ if __name__ == "__main__":
 						connected_list.remove(sock)
 						sock.close()
 						continue
-
 					elif data == "private":
-						private_guide(sock)
-
+						private_guide()
 					elif "p." in data:
 						private_msg(data, sock, suport)
-
 					elif data == "show users":
 						show_users(sock, suport, record[(ip,port)])
 					else:
 						msg = "\r\33[1m"+"\33[35m "+record[(ip,port)]+": "+"\33[0m"+data+"\n"
 						send_to_all(sock,msg)
-                # crt+c exit
 				except:
 					print "-------------------------XXXXXXXXXX-------------------------"
 					(ip,port) = sock.getpeername()

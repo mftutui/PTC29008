@@ -5,12 +5,6 @@ def display():
 	sys.stdout.write(you)
 	sys.stdout.flush()
 
-def private_message(user,msg):
-    print "Private message for you!"
-    msg = "\33[34m\33[ "+ user+": \33[0m"+msg
-    sys.stdout.write(msg)  
-    sys.stdout.flush()
-
 def name_empty():
     name = raw_input("\33[34m\33[1mEnter username: \33[0m")
     while (name is None) or (str(name).strip() == ""):
@@ -20,7 +14,7 @@ def name_empty():
 
 def main():
     host = "localhost"
-    port = 5003
+    port = 5002
 
     name = name_empty()
     
