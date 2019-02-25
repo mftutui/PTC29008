@@ -20,7 +20,8 @@ def check_name_list():
 		#server status msg
 		print "Client (%s, %s) connected" % addr,"[",record[addr],"]" 
 
-		conn.send("\33[32m\r\33[1m Welcome to chat room. Enter 'exit' anytime to left. \n\33[0m") 
+		#conn.send("\33[32m\r\33[1m Welcome to chat room. Enter 'exit' anytime to left. \n\33[0m") 
+		conn.send("\33[32m\r\33[1m Welcome to chat room.\n\33[0m") 
 		send_to_all(conn, "\33[32m\r\33[1m The user \33[34m\33[1m"+name+"\33[0m \33[32m\33[1mjoined the conversation. \n\33[0m")
 	else:
 		conn.send("\r\33[31m\33[1mUsername already taken! \n\33[0m")
@@ -55,15 +56,32 @@ def private_msg(data, sock, suport):
 	else:
 		private_guide(sock)
 
-def exit_chat(sock):
-	sock.send("exit")
+#def exit_chat(sock, record, suport, connected_list, info):
+	#sock.send("exit")
+	#msg = "\r\33[1m"+"\33[31m "+record[(ip,port)]+" left the conversation \n\33[0m"
+	#send_to_all(sock,msg)
+	#server status msg
+	#print "Client (%s, %s) is offline" % (ip,port)," [",record[(ip,port)],"]"
+	#del record[(ip,port)]
+	#del suport[(ip,port),conn]
+	#connected_list.remove(sock)
+	#sock.close()		
+	
+	#for addr2, name2 in suport.items():
+		#print "fazendo o for \n"
+		#if name2 == info:
+			#addr2[1].send("exit")
+			#del record[addr2[0]]
+			#del suport[addr2[0], addr2[1]]
+			#connected_list.remove(addr2[1])
+			#addr2[1].close()
+			#print "record: ", record.items()
+			#print "suport: ", suport.items()
 
 if __name__ == "__main__":
 	name = ""
-	#dictionary to store address corresponding to username
 	record = {}
 	suport = {}
-	#list to keep track of socket descriptors
 	connected_list = []
 
 	#time used on recv
@@ -77,7 +95,6 @@ if __name__ == "__main__":
 	#add a socket object to the connections list
 	connected_list.append(server_socket)
 
-	#server status msg
 	print "\33[32m \tSERVER WORKING \33[0m" 
 
 	while 1:
@@ -114,17 +131,14 @@ if __name__ == "__main__":
 						msg = "\r\33[1m"+"\33[35m "+record[(ip,port)]+": "+"\33[0m"+data+"\n"
 						send_to_all(sock,msg)
 				except:
+					print "-------------------------XXXXXXXXXX-------------------------"
 					(ip,port) = sock.getpeername()
-					send_to_all(sock, "\r\33[31m \33[1m"+record[(ip,port)]+" left the conversation!\33[0m\n")
-					#server status msg	
+					send_to_all(sock, "\r\33[31m \33[1m"+record[(ip,port)]+" left the conversation!\33[0m\n")	
 					print "Client (%s, %s) is offline (error)" % (ip,port)," [",record[(ip,port)],"]\n"
 					del record[(ip,port)]
 					del suport[(ip,port),conn]
 					connected_list.remove(sock)
-					sock.close()
-					continue
+					#sock.close()
+					#continue
 
 	server_socket.close()
-
-	# pensar em uma forma de pedir para digitar o nome novamente se ja estiver na lista e nao derrubar a conexao
-	# tratar dados igual a nada

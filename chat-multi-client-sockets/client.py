@@ -44,8 +44,8 @@ def main():
                 if not data :
                     print '\33[31m\33[1m \rYOU ARE DISCONNECTED!!\n \33[0m'
                     sys.exit()
-                elif data == "exit":
-                    exit_chat(client_socket)
+                #elif data == "exit":
+                    #exit_chat(client_socket)
                 else:
                     sys.stdout.write(data)
                     display()
