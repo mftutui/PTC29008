@@ -14,7 +14,7 @@ def name_empty():
 
 def main():
     host = "localhost"
-    port = 5002
+    port = 5001
 
     name = name_empty()
     
