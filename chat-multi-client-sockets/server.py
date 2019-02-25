@@ -55,15 +55,8 @@ def private_msg(data, sock, suport):
 	else:
 		private_guide(sock)
 
-def bye_bye(sock, record, suport, connected_list, info):
-	msg = "\r\33[1m"+"\33[31m "+record[(ip,port)]+" left the conversation \n\33[0m"
-	send_to_all(sock,msg)
-	#server status msg
-	print "Client (%s, %s) is offline" % (ip,port)," [",record[(ip,port)],"]"
-	del record[(ip,port)]
-	del suport[(ip,port),conn]
-	connected_list.remove(sock)
-	sock.close()		
+def exit_chat(sock):
+	sock.send("exit")
 
 if __name__ == "__main__":
 	name = ""
@@ -109,12 +102,11 @@ if __name__ == "__main__":
 					ip,port = sock.getpeername()
 					print "Data [ %s ] received from:" % data,"[",record[(ip,port)],"]" 
 
-					if data == "bye":
-						bye_bye(sock, record, suport, connected_list, record[(ip,port)])
+					if data == "exit":
+						exit_chat(sock, record, suport, connected_list, record[(ip,port)])
 					elif data == "private":
 						private_guide(sock)
 					elif "p." in data:
-						print "ENTORU NO ELIF"
 						private_msg(data, sock, suport)
 					elif data == "show users":
 						show_users(sock, suport, record[(ip,port)])
@@ -122,13 +114,10 @@ if __name__ == "__main__":
 						msg = "\r\33[1m"+"\33[35m "+record[(ip,port)]+": "+"\33[0m"+data+"\n"
 						send_to_all(sock,msg)
 				except:
-					print "-------------------------XXXXXXXXXX-------------------------"
 					(ip,port) = sock.getpeername()
-					send_to_all(sock, "\r\33[31m \33[1m"+record[(ip,port)]+" left the conversation unexpectedly\33[0m\n")
-
+					send_to_all(sock, "\r\33[31m \33[1m"+record[(ip,port)]+" left the conversation!\33[0m\n")
 					#server status msg	
 					print "Client (%s, %s) is offline (error)" % (ip,port)," [",record[(ip,port)],"]\n"
-
 					del record[(ip,port)]
 					del suport[(ip,port),conn]
 					connected_list.remove(sock)

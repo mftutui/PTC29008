@@ -12,6 +12,9 @@ def name_empty():
             name = raw_input("\33[34m\33[1mEnter username: \33[0m")
     return name
 
+def exit_chat(client_socket):
+    client_socket.close()
+
 def main():
     host = "localhost"
     port = 5001
@@ -24,7 +27,7 @@ def main():
     try :
         client_socket.connect((host, port))
     except :
-        print "\33[31m\33[1m Can't connect to the server \33[0m"
+        print "\33[31m\33[1m Can't connect to the server.\33[0m"
         sys.exit() 
 
     client_socket.send(name)
@@ -41,6 +44,8 @@ def main():
                 if not data :
                     print '\33[31m\33[1m \rYOU ARE DISCONNECTED!!\n \33[0m'
                     sys.exit()
+                elif data == "exit":
+                    exit_chat(client_socket)
                 else:
                     sys.stdout.write(data)
                     display()
