@@ -1,6 +1,6 @@
 # Protocolo para bate-papo
 
-Aplicação de bate papo desenvolvida na disciplica de *Projeto de protocolos*
+Aplicação de bate papo desenvolvida na disciplina de *Projeto de protocolos*
 
 ## Sumário
 
