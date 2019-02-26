@@ -68,7 +68,7 @@ O bate papo deve ser inicializado com o servidor.
 *Server*
 > $ python server.py
 <pre>
-	SERVER WORKING 
+SERVER WORKING 
 </pre>
 
 ### Cliente
@@ -78,7 +78,7 @@ Após, poderão ser inicializados os clientes de forma similar ao servidor.
 *Client*
 > $ python client.py
 <pre>
-    Enter username:
+Enter username:
 </pre>
 
 O mesmo procedimento deverá ser realizado para cada um dos clientes que desejarem participar do chat.
