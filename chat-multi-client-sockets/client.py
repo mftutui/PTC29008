@@ -1,3 +1,5 @@
+# https://github.com/mftutui/PTC29008
+
 import socket, select, string, sys
 
 def display():

@@ -1,3 +1,5 @@
+# https://github.com/mftutui/PTC29008
+
 import socket, select
 
 def send_to_all (sock, message):
