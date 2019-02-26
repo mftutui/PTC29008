@@ -4,9 +4,9 @@ Aplicação de bate papo desenvolvida na disciplica de *Projeto de protocolos*
 
 ## Sumário
 
-* [Especificação do serviço](#especificacao-do-servico)
-* [Vocabulário](#vocabulario)
-* [## Manual de uso](#nmanual-de-uso)
+* [Especificação do serviço](#especificação-do-serviço)
+* [Vocabulário](#vocabulário)
+* [Manual de uso](#manual-de-uso)
 
 
 ## Especificação do serviço
