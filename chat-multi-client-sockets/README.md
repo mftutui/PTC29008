@@ -2,11 +2,60 @@
 
 Aplicação de bate papo desenvolvida na disciplica de *Projeto de protocolos*
 
+
+## Especificação do serviço
+
+A aplicação de bate papo foi desenvolvida a partir do modelo cliente/servidor usando sockets. 
+
+O programa servidor assim que inicializado, cria um socket utilizando a função socket() e a partir da função bind() associa o socket a uma porta do sistema operacional. Em seguida aguarda a conexão de clientes nessa mesma porta utilizando listen(). 
+
+Quando um cliente faz uma conexão, a chamada accept() é utilizada do lado do servidor a fim de estabelecer a comunicação entre ambos. Em seguida o cliente se conecta ao servidor através da função connect() e inicia um loop para a troca de mensagens através do par de funções sen () e recv(). O mesmo loop é estabelecido no lado do servidor, esperando novas conexões com a função listem(), bem como a troca de mensagens também utilizando as chamadas send() e recv(). 
+
+- O serviço nao possui restrições qundo a sistemas operacionais para implementado.
+
+- A aplicação foi desenvolvida utilizando a linguagem de programação *Python 2.7.10* o que carreta na necessidade da instalação do mesmo para o uso do bate papo.
+
+- O bate papo foi feito com base em: [chat-app](https://github.com/Rishija/chat-app)
+
+## Vocabulário  
+
+ - A aplicação do servidor conta com uma série de funções para a troca de mensagens. Cada mensagem vinda do cliente é tratada no servidor e de acordo com o seu conteúdo. Tendo como exemplo, mensagens cujo conteúdo não possui nenhuma palavra reservada são enviadas utilizando a função *send_to_all()* para todos os clinetes conectados ao chat. Todas as funções encontradas no *servidor.py* serão descritas a seguir:
+
+*send_to_all(sock, message)*
+A função é responsável por enviar uma mensagem para todos os clientes conectados, exeto para o clinete que está solicitando o envio.
+
+*private_guide(sock)*
+A fim de alertar um cliente sobre a sintaxe correta para o envio de uma mensagem privada a função é responsável por mostrar ao próprio clinete como fazê-lo.
+
+*check_name_list(conn, record, suport, connected_list)*
+A cada novo usuário conectado ao chat é feito o teste para saber se o nome de identificação escolhido pelo mesmo já existe no chat, o que é feito a partir da varredura dos dicionários de controle. Caso o usuário tenha um nome único no sistema o mesmo é inicializado no babe papo, caso contrário, a conexão é encerrada.
+
+*show_users(sock, suport, your_name)*
+Para facilitar o envio de uma mensagem privada o usuário dispõe de uma função que mostra todos os usuários conectados ao servidor. A função faz a varredura em um dicionário de controle e plota os nomes dos conectados. 
+
+*private_msg(data, sock, suport)*
+Utilizando o objeto de socket de quem solicitou o envio de uma mensagem privada, a função separa as informações provenientes do dado enviado pelo cliente e faz o envio da mensagem para o usuário especificado. Além de chamar a função *private_guide(sock)* caso a sintaxe esteja errada.
+
+*welcome_rules(conn)*
+Função carregada após a conexão do usuário para apresentação das palavras reservadas e suas funções. 
+
+*exit_chat(sock, name_ex, record, suport, connected_list)*
+A parir do uso da palavra "exit" o clinete pode sair do chat e enviar uma mensagem informando os demais conectados. Essa função também é responsável por remover as informações do cliente desconectado dos dicionários de controle. O socket é encerrado no cliente.
+
+- Assim como em *server.py* a aplicação do lado cliente, *client.py* possui funções para serem utilizadas de acordo com a necessidade do clinete. As funções do cliente serão descritas a seguir:
+
+*display()*
+Função utilizada para mostrar "You:" sempre que o usuário estiver aguardando para enviar ou receber uma mensagem. 
+
+*check_name_empty()*
+Verifica se o username informado pelo cliente no inicio da conexão é válido, possui algum caracter.
+
+*exit_char(client_socket)*
+Função responsável pela desconexão de um clinete que enviou a mensagem "exit" para o servidor. 
+
 ## Manual de uso
 
-### Inicialização Cliente/Servidor
-
-## Servidor
+### Servidor
 
 O bate papo deve ser inicializado com o servidor.
 
@@ -16,7 +65,7 @@ O bate papo deve ser inicializado com o servidor.
 	SERVER WORKING 
 </pre>
 
-## Cliente
+### Cliente
 
 Após, poderão ser inicializados os clientes de forma similar ao servidor.
 
@@ -32,28 +81,28 @@ Antes de tudo, é necessário informar um nome de usuário. O mesmo não deverá
 
 *Client*
 <pre>
-    Enter username: Maria
-    Welcome to chat room! 
-    - Enter 'exit' anytime to left. 
-    - Enter 'show users' to see who is online. 
-    - To send a private message use: 'p.USERNAME:msgContent'
+Enter username: Maria
+Welcome to chat room! 
+- Enter 'exit' anytime to left. 
+- Enter 'show users' to see who is online. 
+- To send a private message use: 'p.USERNAME:msgContent'
 </pre>
 
 Caso o servidor não tenha sido inicializado uma mensagem será enviada ao cliente, onformando-o.
 
 *Client*
 <pre>
-    Enter username: Maria
-    Can't connect to the server.
+Enter username: Maria
+Can't connect to the server.
 </pre>
 
 Caso seja usado um nome já escolhido. O usuário será desconectado.
 
 *Client*
 <pre>
-    Enter username: Maria
-    Username already taken! 
-    YOU ARE DISCONNECTED!!
+Enter username: Maria
+Username already taken! 
+YOU ARE DISCONNECTED!!
 </pre>
 
 Caso o nome seja completo com espaços ou não possua caracteres, o usuáro será questionado novamente.
@@ -114,19 +163,19 @@ Se o usuário escolhido estiver conectado no momento, a mensagem será envida.
 
 *Client*
 <pre>
-    ...
-    Private message from Maria: Mensagem privada!!
-    You: 
+...
+Private message from Maria: Mensagem privada!!
+You: 
 </pre>
 
 Caso contrário, uma mensagem informado que o usuário não encontra-se conectado será apresentada.
 
 *Client*
 <pre>
-    ...
-    You: p.Fernanda:Nova mensagem privada!!
-    The user Fernanda is not connected. 
-    You:
+...
+You: p.Fernanda:Nova mensagem privada!!
+The user Fernanda is not connected. 
+You:
 </pre> 
 
 Quanto ao envido da mensagem privada, se a sintaxe da mesma estiver diferente da prevista será apresentada a sintaxe correta para o usuário.
