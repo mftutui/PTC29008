@@ -17,18 +17,18 @@ def exit_chat(client_socket):
 
 def main():
     host = "localhost"
-    port = 5001
+    port = 5003
 
     name = name_empty()
-    
+
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.settimeout(2)
-        
+
     try :
         client_socket.connect((host, port))
     except :
         print "\33[31m\33[1m Can't connect to the server.\33[0m"
-        sys.exit() 
+        sys.exit()
 
     client_socket.send(name)
     display()
@@ -36,7 +36,7 @@ def main():
     while 1:
         socket_list = [sys.stdin, client_socket]
         rList, wList, error_list = select.select(socket_list , [], [])
-        
+
         for sock in rList:
             #incoming message from server
             if sock == client_socket:
@@ -44,8 +44,8 @@ def main():
                 if not data :
                     print '\33[31m\33[1m \rYOU ARE DISCONNECTED!!\n \33[0m'
                     sys.exit()
-                #elif data == "exit":
-                    #exit_chat(client_socket)
+                elif data == "exit_chat":
+                    exit_chat(client_socket)
                 else:
                     sys.stdout.write(data)
                     display()
