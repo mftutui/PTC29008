@@ -94,6 +94,14 @@ Welcome to chat room!
 - To send a private message use: 'p.USERNAME:msgContent'
 </pre>
 
+
+Uma mensagem é impressa no servidor para o controle dos usuários cadastrados
+
+*Server*
+<pre>
+Client (127.0.0.1, 51640) connected [ Maria ]
+</pre>
+
 Caso o servidor não tenha sido inicializado uma mensagem será enviada ao cliente, onformando-o.
 
 *Client*
@@ -130,7 +138,7 @@ The user Ana joined the conversation.
 
 Inicialmente todas as mensagem trocadas são publicas, ou seja, todos os demais usuários conectados receberão.
 
-A fim de visualizar todos os usuários logados no momento o usuário pode, a qualquer momento enviar "show users". Uma lista com os nomes será apresentada.
+A fim de visualizar todos os usuários logados o usuário pode, a qualquer momento enviar "show users" e uma lista com os nomes será apresentada.
 
 *Client*
 <pre>
@@ -174,6 +182,13 @@ Private message from Maria: Mensagem privada!!
 You: 
 </pre>
 
+O servidor será notificado sobre o envio da mensagem da seguinte forma:
+
+*Server*
+<pre>
+Client (127.0.0.1, 51640) [ Maria ] sending a private message to: [ Clara ]
+</pre>
+
 Caso contrário, uma mensagem informado que o usuário não encontra-se conectado será apresentada.
 
 *Client*
@@ -183,6 +198,13 @@ You: p.Fernanda:Nova mensagem privada!!
 The user Fernanda is not connected. 
 You:
 </pre> 
+
+Nesse caso o servidor só receberá uma notificação de mensagem comum.
+
+*Server*
+<pre>
+Data [ p.Fernanda:Nova mensagem privada!! ] received from: [ Maria ]
+</pre>
 
 Quanto ao envido da mensagem privada, se a sintaxe da mesma estiver diferente da prevista será apresentada a sintaxe correta para o usuário.
 
@@ -220,10 +242,32 @@ The user Clara left the conversation.
 You: 
 </pre>
 
+Da mesma forma, o servidor será notificado.
+
+*Server*
+<pre>
+Client (127.0.0.1, 51667) is offline (error) [ Clara ]
+</pre>
+
 Caso o servidor seja derrubado, todos os usuários serã autimaticamente desconectados e apresentarão a seguinte mensagem:
 
 *Client*
 <pre>
 ...
 YOU ARE DISCONNECTED!! 
+</pre>
+
+Cada mensagem enviada por um clinete, será mostrada no console do sevidor como forma de controle de mensagem e confirmação de recepção. 
+
+*Server*
+<pre>
+Client (127.0.0.1, 51640) connected [ Maria ]
+Data [ show users ] received from: [ Maria ]
+Client (127.0.0.1, 51659) connected [ Ana ]
+Client (127.0.0.1, 51667) connected [ Clara ]
+Client (127.0.0.1, 51640) [ Maria ] sending a private message to: [ Clara ]
+Data [ exit ] received from: [ Maria ]
+Client (127.0.0.1, 51667) is offline (error) [ Maria ]
+Data [ exit ] received from: [ Clara ]
+Client (127.0.0.1, 51667) is offline (error) [ Clara ]
 </pre>
