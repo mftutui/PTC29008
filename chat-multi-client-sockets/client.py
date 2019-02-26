@@ -5,7 +5,7 @@ def display():
 	sys.stdout.write(you)
 	sys.stdout.flush()
 
-def name_empty():
+def check_name_empty():
     name = raw_input("\33[34m\33[1mEnter username: \33[0m")
     while (name is None) or (str(name).strip() == ""):
 	    print ("\33[31m\33[1mUsername is empty!\33[0m")
@@ -17,9 +17,8 @@ def exit_chat(client_socket):
 
 def main():
     host = "localhost"
-    port = 5003
-
-    name = name_empty()
+    port = 5002
+    name = check_name_empty()
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.settimeout(2)

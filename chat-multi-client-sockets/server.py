@@ -60,50 +60,18 @@ def exit_chat(sock, name_ex, record, suport, connected_list):
 	for addr, name in suport.items():
 		if addr[1] == sock:
 			msg = "\r\33[1m"+"\33[31mThe user "+name_ex+" left the conversation. \n\33[0m"
+			print "Client (%s, %s) is offline (error)" % (ip,port)," [",record[(ip,port)],"]"
 			send_to_all(sock, msg)
-
-			for coisa in suport.items():
-				print coisa
-			for coisa2 in record.items():
-				print coisa2
-
-			print"aqui eh a connected_list \n"
-			print connected_list
-
 			for item in connected_list:
 				if item == sock:
 					connected_list.remove(sock)
-					print "removi coisa da lista: ", sock
-
-					print "printando a nova lista:"
-					print connected_list
-
 			for	ipportasock, nome  in suport.items():
 				if ipportasock[1] == sock:
-					print "achei o sock na lista suport \n"
-					print ipportasock[1], sock
 					del suport[ipportasock]
-
-					print "printando mais uma vez pra ter verteza: \n"
-					for um, dois in suport.items():
-						print um, dois
-
 			for ipportasock2, nome2 in record.items():
 				if nome2 == name_ex:
-					print "achei o nome na lista record \n"
-					print nome2
-
-					print "tentando deletar de record"
 					del record[ipportasock2]
-					print "printando o record pra ver se saiu mesmo:"
-
-					for lala, lolo in record.items():
-						print lala, lolo
-
 			sock.send("exit_chat")
-
-
-
 
 if __name__ == "__main__":
 	name = ""
@@ -113,7 +81,7 @@ if __name__ == "__main__":
 
 	#time used on recv
 	buffer = 4096
-	port = 5003
+	port = 5002
 
 	server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	server_socket.bind(("localhost", port))
@@ -158,6 +126,7 @@ if __name__ == "__main__":
 						msg = "\r\33[1m"+"\33[35m "+record[(ip,port)]+": "+"\33[0m"+data+"\n"
 						send_to_all(sock,msg)
 				except:
+					(ip,port) = sock.getpeername()
+					exit_chat(sock, record[(ip,port)], record, suport, connected_list)
 					continue
-
 	server_socket.close()
