@@ -16,7 +16,6 @@ def exit_chat(client_socket):
     client_socket.close()
 
 def main():
-    host = "localhost"
     port = 5001
     name = check_name_empty()
 
@@ -34,7 +33,7 @@ def main():
 
     while 1:
         socket_list = [sys.stdin, client_socket]
-        rList, wList, error_list = select.select(socket_list , [], [])
+        rList, wList, error = select.select(socket_list , [], [])
 
         for sock in rList:
             #incoming message from server

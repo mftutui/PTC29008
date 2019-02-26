@@ -49,7 +49,7 @@ def private_msg(data, sock, suport):
 		if i == 1:
 			msg = data[data.find(":")+1:]
 			print "Client (%s, %s) " % (ip,port),"[",record[(ip,port)],"] sending a private message to: [ %s ]" % name_p
-			addr_p[1].send("\33[34m\r\33[1mPrivate message from "+record[(ip,port)]+"\33[0m: "+msg+ "\n")
+			addr_p[1].send("\33[34m\r\33[1mPrivate message from "+record[(ip,port)]+": \33[0m"+msg+ "\n")
 			sock.send("\33[32m\r\33[1mYour private message was sended.\n\33[0m")
 		else:
 			sock.send("\33[31m\r\33[1m The user \33[34m\33[1m"+name_p+"\33[0m \33[31m\33[1mis not connected. \n\33[0m")
