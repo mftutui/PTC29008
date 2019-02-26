@@ -12,7 +12,7 @@ def send_to_all (sock, message):
 def private_guide(sock):
 	sock.send("\r\33[31m\33[1mWrong sintaxe! \n To send a private message use:\33[0m \33[34m\33[1m'p.USERNAME:msgContent'\n\33[0m")
 
-def check_name_list():
+def check_name_list(conn, record, suport, connected_list):
 	if name not in record.values():
 		record[addr] = name
 		suport[addr,conn] = name
@@ -20,9 +20,8 @@ def check_name_list():
 		#server status msg
 		print "Client (%s, %s) connected" % addr,"[",record[addr],"]"
 
-		#conn.send("\33[32m\r\33[1m Welcome to chat room. Enter 'exit' anytime to left. \n\33[0m")
-		conn.send("\33[32m\r\33[1m Welcome to chat room.\n\33[0m")
-		send_to_all(conn, "\33[32m\r\33[1m The user \33[34m\33[1m"+name+"\33[0m \33[32m\33[1mjoined the conversation. \n\33[0m")
+		welcome_rules(conn)
+		
 	else:
 		conn.send("\r\33[31m\33[1mUsername already taken! \n\33[0m")
 		del record[addr]
@@ -51,10 +50,18 @@ def private_msg(data, sock, suport):
 			msg = data[data.find(":")+1:]
 			print "Client (%s, %s) " % (ip,port),"[",record[(ip,port)],"] sending a private message to: [ %s ]" % name_p
 			addr_p[1].send("\33[34m\r\33[1mPrivate message from "+record[(ip,port)]+"\33[0m: "+msg+ "\n")
+			sock.send("\33[32m\r\33[1mYour private message was sended.\n\33[0m")
 		else:
 			sock.send("\33[31m\r\33[1m The user \33[34m\33[1m"+name_p+"\33[0m \33[31m\33[1mis not connected. \n\33[0m")
 	else:
 		private_guide(sock)
+
+def welcome_rules(conn):
+	conn.send("\33[32m\r\33[1m Welcome to chat room! \n\33[0m")
+	conn.send("\33[32m\r\33[1m - Enter 'exit' anytime to left. \n\33[0m")
+	conn.send("\33[32m\r\33[1m - Enter 'show users' to see who is online. \n\33[0m")
+	conn.send("\33[32m\r\33[1m - To send a private message use:\33[0m \33[34m\33[1m'p.USERNAME:msgContent'\n\33[0m")
+	send_to_all(conn, "\33[32m\r\33[1m The user \33[34m\33[1m"+name+"\33[0m \33[32m\33[1mjoined the conversation. \n\33[0m")
 
 def exit_chat(sock, name_ex, record, suport, connected_list):
 	for addr, name in suport.items():
@@ -81,7 +88,7 @@ if __name__ == "__main__":
 
 	#time used on recv
 	buffer = 4096
-	port = 5002
+	port = 5001
 
 	server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	server_socket.bind(("localhost", port))
@@ -104,7 +111,7 @@ if __name__ == "__main__":
 				connected_list.append(conn)
 				record[addr] = ""
 				suport[addr,conn] = ""
-				check_name_list()
+				check_name_list(conn, record, suport, connected_list)
 			#data received
 			else:
 				try:

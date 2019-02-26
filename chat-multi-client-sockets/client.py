@@ -17,14 +17,14 @@ def exit_chat(client_socket):
 
 def main():
     host = "localhost"
-    port = 5002
+    port = 5001
     name = check_name_empty()
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.settimeout(2)
 
     try :
-        client_socket.connect((host, port))
+        client_socket.connect(("localhost", port))
     except :
         print "\33[31m\33[1m Can't connect to the server.\33[0m"
         sys.exit()
