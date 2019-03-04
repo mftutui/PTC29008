@@ -25,13 +25,13 @@ Quando um cliente faz uma conexão, a chamada accept() é utilizada do lado do s
 
 ## Vocabulário  
 
- - A aplicação do servidor conta com uma série de funções para a troca de mensagens. Cada mensagem vinda do cliente é tratada no servidor e de acordo com o seu conteúdo. Tendo como exemplo, mensagens cujo conteúdo não possui nenhuma palavra reservada são enviadas utilizando a função *send_to_all()* para todos os clinetes conectados ao chat. Todas as funções encontradas no *servidor.py* serão descritas a seguir:
+ - A aplicação do servidor conta com uma série de funções para a troca de mensagens. Cada mensagem vinda do cliente é tratada no servidor e de acordo com o seu conteúdo. Tendo como exemplo, mensagens cujo conteúdo não possui nenhuma palavra reservada são enviadas utilizando a função *send_to_all()* para todos os clientes conectados ao chat. Todas as funções encontradas no *servidor.py* serão descritas a seguir:
 
 *send_to_all(sock, message)*
-- A função é responsável por enviar uma mensagem para todos os clientes conectados, exeto para o clinete que está solicitando o envio.
+- A função é responsável por enviar uma mensagem para todos os clientes conectados, exeto para o cliente que está solicitando o envio.
 
 *private_guide(sock)*
-- A fim de alertar um cliente sobre a sintaxe correta para o envio de uma mensagem privada a função é responsável por mostrar ao próprio clinete como fazê-lo.
+- A fim de alertar um cliente sobre a sintaxe correta para o envio de uma mensagem privada a função é responsável por mostrar ao próprio cliente como fazê-lo.
 
 *check_name_list(conn, record, suport, connected_list)*
 - A cada novo usuário conectado ao chat é feito o teste para saber se o nome de identificação escolhido pelo mesmo já existe no chat, o que é feito a partir da varredura dos dicionários de controle. Caso o usuário tenha um nome único no sistema o mesmo é inicializado no babe papo, caso contrário, a conexão é encerrada.
@@ -46,9 +46,9 @@ Quando um cliente faz uma conexão, a chamada accept() é utilizada do lado do s
 - Função carregada após a conexão do usuário para apresentação das palavras reservadas e suas funções. 
 
 *exit_chat(sock, name_ex, record, suport, connected_list)*
-- A parir do uso da palavra "exit" o clinete pode sair do chat e enviar uma mensagem informando os demais conectados. Essa função também é responsável por remover as informações do cliente desconectado dos dicionários de controle. O socket é encerrado no cliente.
+- A parir do uso da palavra "exit" o cliente pode sair do chat e enviar uma mensagem informando os demais conectados. Essa função também é responsável por remover as informações do cliente desconectado dos dicionários de controle. O socket é encerrado no cliente.
 
-- Assim como em *server.py* a aplicação do lado cliente, *client.py* possui funções para serem utilizadas de acordo com a necessidade do clinete. As funções do cliente serão descritas a seguir:
+- Assim como em *server.py* a aplicação do lado cliente, *client.py* possui funções para serem utilizadas de acordo com a necessidade do cliente. As funções do cliente serão descritas a seguir:
 
 *display()*
 - Função utilizada para mostrar "You:" sempre que o usuário estiver aguardando para enviar ou receber uma mensagem. 
@@ -57,7 +57,7 @@ Quando um cliente faz uma conexão, a chamada accept() é utilizada do lado do s
 - Verifica se o username informado pelo cliente no inicio da conexão é válido, possui algum caracter.
 
 *exit_char(client_socket)*
-- Função responsável pela desconexão de um clinete que enviou a mensagem "exit" para o servidor. 
+- Função responsável pela desconexão de um cliente que enviou a mensagem "exit" para o servidor. 
 
 ## Manual de uso
 
@@ -227,7 +227,7 @@ To send a private message use: 'p.USERNAME:msgContent'
 You: 
 </pre>
 
-Para sair do chat o cliente por a qualquer momento enviar "exit", assim que enviado o clinete será desconectado do chat. Todos os usuários ainda conectados receberão uma mensagem informando a saída do usuário.
+Para sair do chat o cliente por a qualquer momento enviar "exit", assim que enviado o cliente será desconectado do chat. Todos os usuários ainda conectados receberão uma mensagem informando a saída do usuário.
 
 *Client*
 <pre>
