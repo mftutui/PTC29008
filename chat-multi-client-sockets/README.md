@@ -257,7 +257,7 @@ Caso o servidor seja derrubado, todos os usuários serã autimaticamente descone
 YOU ARE DISCONNECTED!! 
 </pre>
 
-Cada mensagem enviada por um clinete, será mostrada no console do sevidor como forma de controle de mensagem e confirmação de recepção. 
+Cada mensagem enviada por um cliente, será mostrada no console do sevidor como forma de controle de mensagem e confirmação de recepção. 
 
 *Server*
 <pre>
