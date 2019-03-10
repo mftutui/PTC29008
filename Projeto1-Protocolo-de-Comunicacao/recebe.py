@@ -1,10 +1,10 @@
 import serial, sys, enum
-from framing import Reception
+from framing import Framing
 
 if __name__ == '__main__':
-    dev = serial.Serial('/dev/pts/8')
+    dev = serial.Serial('/dev/pts/5')
 
-    enq = Reception(dev)
+    enq = Framing(dev, 1, 1024)
 
     while True:
         enq.handle()
