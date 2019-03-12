@@ -4,6 +4,7 @@ from framing import Framing
 if __name__ == '__main__':
     dev = serial.Serial('/dev/pts/2')
 
-    enq = Framing(dev, 1, 1024, dev.fileno, 3)
-    
+    enq = Framing(dev, 1, 1024, 3)
+    while True:
+        print(enq.receive())
     

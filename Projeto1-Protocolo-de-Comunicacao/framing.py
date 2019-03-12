@@ -17,7 +17,7 @@ class Framing(poller.Callback):
        
 
     def handle(self):
-
+        print("oi")
     def handle_timeout(self):
         print('Timeout !')
         

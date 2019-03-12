@@ -24,7 +24,7 @@ if __name__ == '__main__':
             quadro = quadro + a
             i = i + 1
         
-    enq = Framing(dev, 1, 1024)
+    enq = Framing(dev, 1, 1024, 3)
     print (quadro)
     enq.send(str(quadro), len(quadro))
     
