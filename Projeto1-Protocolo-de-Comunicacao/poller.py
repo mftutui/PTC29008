@@ -46,11 +46,11 @@ class Callback():
 
   def disable_timeout(self):
       'Desativa o timeout'
-      if base_tout > 0: base_tout = -base_tout
+      if self.base_timeout > 0: self.base_timeout = -self.base_timeout
 
   def enable_timeout(self):
       'Reativa o timeout'
-      if base_tout < 0: base_tout = -base_tout
+      if self.base_timeout < 0: self.base_timeout = -self.base_timeout
 
   @property
   def isTimer(self):
@@ -99,8 +99,9 @@ class Poller:
     cb_to = self._timeout()
     eventos = self.sched.select(cb_to.timeout)
     if not eventos: # timeout !
-      cb_to.handle_timeout()
-      cb_to.reload_timeout()
+      if cb_to.base_timeout > 0:
+        cb_to.handle_timeout()
+        cb_to.reload_timeout()
     else:
       for key,mask in eventos:
         cb = key.data # este é o callback !

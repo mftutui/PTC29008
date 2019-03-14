@@ -22,7 +22,7 @@ class CallbackStdin(poller.Callback):
 cb = CallbackStdin(sys.stdin, 3)
 
 sched = poller.Poller()
-
+cb.disable_timeout()
 sched.adiciona(cb)
 
 

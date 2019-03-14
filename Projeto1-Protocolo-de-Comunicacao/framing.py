@@ -12,11 +12,12 @@ class Framing(poller.Callback):
         self._state = "ocioso"
         self._dev = dev
         self._framesize = 0
-        self._received = []
-        self._completeframe = 0
+        self._received = bytearray()
+        self._frame = ""
         self.fd = dev
         self.timeout = timeout
         self.base_timeout = timeout
+        self.disable_timeout()
        
 
     def handle(self):
@@ -29,9 +30,7 @@ class Framing(poller.Callback):
         
     def send(self, frame, framesize):
         self._dev.write(b'~')
-
         for char in frame:
-            print(char)
             if (char == '~' or char == '}'):
                 self._dev.write(b'}')
                 if (char == '~'):
@@ -40,12 +39,11 @@ class Framing(poller.Callback):
                     self._dev.write(b']')
             else:
                 self._dev.write(bytes(char, 'utf-8'))
-
+        #self._dev.write(b'~')
         
 
     def  handle_fsm(self, byte):
-        print ("Byte recebido: " + str(byte))
-        print('>>>', self.getState())
+
         if byte == None:
             self._state = "ocioso"
             self._ocioso(None)            
@@ -65,25 +63,38 @@ class Framing(poller.Callback):
 #        return received
 
     def _ocioso(self, byte):
+        
         if byte is None:
             self._received.clear()
+            self._frame = ""
             self._framesize = 0
+            self.disable_timeout()
+            
         elif((byte == b'~') and (self._framesize == 0)):
-            self._state = "rx"
+            self._state = "rx"       
+            self.enable_timeout()
         else:
              self._state = "ocioso"
+             self.disable_timeout()
 
-    def _rx(self, byte):
+    def frame(self, frame):
+        self._frame = frame.decode()
+        return self._frame
         
+
+    def _rx(self, byte):     
         
         if (self._framesize > self._bytes_max):
+            self.disable_timeout()
             self._state = "ocioso"
             self._framesize = 0
             self._received.clear()
         elif(byte == b'~' and self._framesize >= self._bytes_min):
+            self.disable_timeout()
             self._state = "ocioso"
-            self._framesize = 0
-            print ("Quadro >>>", self._received)
+            self._framesize = 0            
+            print(self.frame(self._received))
+            self._received.clear()  
             
 
         elif(byte == b'}'):
@@ -91,23 +102,23 @@ class Framing(poller.Callback):
         elif(byte == b'~' and self._framesize == 0):
             self._state = "rx"
         elif (byte != b'~' or byte != b'}'):
-            self._received.append(byte)
+            self._received.append(int.from_bytes(byte, 'big'))
             self._framesize = self._framesize+1
 
 
     def _esc(self, byte):
-       
-       print ("Byte recebido: " + str(byte))
+
        if(byte == b'~' or byte == b'}'):
            self._received.clear()
            self._framesize = 0
            self._state = "ocioso"
+           self.disable_timeout()
        elif(byte == b'^'):
-           self._received.append(b'~')
+           self._received.append(int.from_bytes(byte, 'big'))
            self._framesize = self._framesize + 1
            self._state = "rx"
        elif(byte == b']'):
-           self._received.append(b'}')
+           self._received.append(int.from_bytes(byte, 'big'))
            self._framesize = self._framesize + 1
            self._state = "rx"
        
