@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 
 import selectors
-import time
+import time 
 
+    
 class Callback():
   '''Classe Callback:
         
@@ -58,6 +59,18 @@ class Callback():
       return self.fd == None
 
   
+class Layer(Callback):
+      def __init__(self, top=None, bottom=None):
+        self._top = top
+        self._bottom = bottom
+       
+
+      def handle(self):
+            pass
+          
+      def handle_timeout(self):
+            pass
+
 class Poller:
   '''Classe Poller: um agendador de eventos que monitora objetos
   do tipo arquivo e executa callbacks quando tiverem dados para 

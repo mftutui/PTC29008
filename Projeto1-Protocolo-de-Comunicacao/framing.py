@@ -4,7 +4,7 @@ import serial, sys, enum
 import poller
 
 
-class Framing(poller.Callback):
+class Framing(poller.Layer):
     def __init__(self, dev, bytes_min, bytes_max, timeout):
 
         self._bytes_min = bytes_min
@@ -18,7 +18,8 @@ class Framing(poller.Callback):
         self.timeout = timeout
         self.base_timeout = timeout
         self.disable_timeout()
-       
+        self._top = 1
+        self._bottom = 1
 
     def handle(self):
         byte = self._dev.read()
@@ -39,7 +40,7 @@ class Framing(poller.Callback):
                     self._dev.write(b']')
             else:
                 self._dev.write(bytes(char, 'utf-8'))
-        #self._dev.write(b'~')
+        self._dev.write(b'~')
         
 
     def  handle_fsm(self, byte):
@@ -114,11 +115,11 @@ class Framing(poller.Callback):
            self._state = "ocioso"
            self.disable_timeout()
        elif(byte == b'^'):
-           self._received.append(int.from_bytes(byte, 'big'))
+           self._received.append(int.from_bytes(b'~', 'big'))
            self._framesize = self._framesize + 1
            self._state = "rx"
        elif(byte == b']'):
-           self._received.append(int.from_bytes(byte, 'big'))
+           self._received.append(int.from_bytes(b'}', 'big'))
            self._framesize = self._framesize + 1
            self._state = "rx"
        
