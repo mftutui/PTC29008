@@ -95,6 +95,7 @@ class Framing(poller.Layer):
             self._state = "ocioso"
             self._framesize = 0            
             print(self.frame(self._received))
+            #self._top._notifyLayer(self.frame(self._received))
             self._received.clear()  
             
 

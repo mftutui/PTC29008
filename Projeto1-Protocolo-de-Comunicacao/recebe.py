@@ -8,6 +8,7 @@ if __name__ == '__main__':
 
     enq = Framing(dev, 1, 1024, 1)
     sched = poller.Poller()
-    sched.adiciona(enq)
-    sched.despache()
+    proto = poller.Protocolo(sched)
+    proto._poller.adiciona(enq)
+    proto.start()
     

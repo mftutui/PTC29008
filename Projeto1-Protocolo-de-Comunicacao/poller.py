@@ -71,6 +71,15 @@ class Layer(Callback):
       def handle_timeout(self):
             pass
 
+      def _print(self, dados):
+            print(dados)
+
+      def sendToLayer(self, dados):
+        self._bottom._print(dados);
+
+      def notifyLayer(self, dados):
+        self._top._print(dados)     
+
 class Poller:
   '''Classe Poller: um agendador de eventos que monitora objetos
   do tipo arquivo e executa callbacks quando tiverem dados para 
@@ -127,4 +136,16 @@ class Poller:
         cb = key.data
         if cb != cb_to: cb.update(dt)
 
+class Protocolo():
+      def __init__(self, poller):
+            self._poller = poller
+            self._layers = []
 
+      def addLayer(self, layer):
+            self._layers.append(layer)
+
+      def start(self):
+            self._poller.despache()
+
+            
+            
