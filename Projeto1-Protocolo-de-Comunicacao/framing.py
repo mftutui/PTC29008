@@ -37,44 +37,45 @@ class Framing(poller.Layer):
         self._crc.update(frame)
         msg = self._crc.gen_crc()
         self._dev.write(b'~')
-        print (msg)
+        print (bytes([msg[len(frame)]]))
         a = msg[:len(frame)].decode('ascii')
         print (a)
-        for char in a:
+        for i in range (len(msg)):
             #print (char)
            
-            if ((char) == '~' or (char) == '~'):
+            if (bytes([msg[i]]) == b'~' or bytes([msg[i]]) == b'}'):
                 self._dev.write(b'}')
-                if ((char) == '~'):
+                if (bytes([msg[i]]) == b'~'):
                     self._dev.write(b'^')
-                elif ((char) == '~'):
+                elif (bytes([msg[i]]) == b'}'):
                     self._dev.write(b']')
-            else:
-              
-                self._dev.write(bytes(char, 'ascii'))
-       
-        if (((bytes([msg[len(msg)-2]])) == b'~') or ((bytes([msg[len(msg)-2]])) == b'}')) :
-             self._dev.write(b'}')
-             if (bytes([msg[len(msg)-2]])) == b'~':
-                self._dev.write(b'^')
-             elif (bytes([msg[len(msg)-2]])) == b'}':
-                self._dev.write(b']')
-        else:
-            self._dev.write(bytes([msg[len(msg)-2]]))
+            else:              
+                self._dev.write(bytes([msg[i]]))
+        
+        self._dev.write(b'~')
+        # if (((bytes([msg[len(msg)-2]])) == b'~') or ((bytes([msg[len(msg)-2]])) == b'}')) :
+        #      self._dev.write(b'}')
+        #      if (bytes([msg[len(msg)-2]])) == b'~':
+        #         self._dev.write(b'^')
+        #      elif (bytes([msg[len(msg)-2]])) == b'}':
+        #         self._dev.write(b']')
+        # else:
+        #     self._dev.write(bytes([msg[len(msg)-2]]))
         
        
-        if (((bytes([msg[len(msg)-1]])) == b'~') or ((bytes([msg[len(msg)-1]])) == b'}')) :
-            self._dev.write(b'}')
-            if (bytes([msg[len(msg)-1]])) == b'~':
-                    self._dev.write(b'^')
-            elif (bytes([msg[len(msg)-1]])) == b'}':
-                self._dev.write(b']')
-        else:
-            self._dev.write(bytes([msg[len(msg)-1]]))
+        # if (((bytes([msg[len(msg)-1]])) == b'~') or ((bytes([msg[len(msg)-1]])) == b'}')) :
+        #     self._dev.write(b'}')
+        #     if (bytes([msg[len(msg)-1]])) == b'~':
+        #             self._dev.write(b'^')
+        #     elif (bytes([msg[len(msg)-1]])) == b'}':
+        #         self._dev.write(b']')
+        # else:
+        #     self._dev.write(bytes([msg[len(msg)-1]]))
+        #self._dev.write(b'~')
 
 
 
-        self._dev.write(b'~')
+        
         
 
     def  handle_fsm(self, byte):

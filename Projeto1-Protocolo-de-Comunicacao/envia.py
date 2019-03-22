@@ -3,7 +3,7 @@ from framing import Framing
 import string, random
 
 if __name__ == '__main__':
-    dev = serial.Serial('/dev/pts/7')
+    dev = serial.Serial('/dev/pts/15')
     
     framesize = random.randint(1,15)
     quadro = ""

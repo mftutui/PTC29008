@@ -4,7 +4,7 @@ import poller
 import sys,time
 
 if __name__ == '__main__':
-    dev = serial.Serial('/dev/pts/4')
+    dev = serial.Serial('/dev/pts/14')
 
     enq = Framing(dev, 1, 1024, 1)
     sched = poller.Poller()
