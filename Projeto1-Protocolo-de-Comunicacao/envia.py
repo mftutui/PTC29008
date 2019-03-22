@@ -3,7 +3,7 @@ from framing import Framing
 import string, random
 
 if __name__ == '__main__':
-    dev = serial.Serial('/dev/pts/3')
+    dev = serial.Serial('/dev/pts/7')
     
     framesize = random.randint(1,15)
     quadro = ""
@@ -26,8 +26,9 @@ if __name__ == '__main__':
         
     enq = Framing(dev, 1, 1024, 3)
     print (quadro)
-    enq.send(str(quadro), len(quadro))
+    enq.send(bytes(quadro, 'ascii'), len(quadro))
     
  
     
        
+

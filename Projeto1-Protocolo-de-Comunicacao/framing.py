@@ -2,6 +2,7 @@
 
 import serial, sys, enum
 import poller
+import crc
 
 
 class Framing(poller.Layer):
@@ -20,26 +21,59 @@ class Framing(poller.Layer):
         self.disable_timeout()
         self._top = 1
         self._bottom = 1
+        self._crc = crc.CRC16(" ")
 
     def handle(self):
         byte = self._dev.read()
+        
         self.handle_fsm(byte)
         
     def handle_timeout(self):
         print('Timeout !')
         self.handle_fsm(None)
         
-    def send(self, frame, framesize):
+    def send(self, frame, framesize):   
+        self._crc.clear()
+        self._crc.update(frame)
+        msg = self._crc.gen_crc()
         self._dev.write(b'~')
-        for char in frame:
-            if (char == '~' or char == '}'):
+        print (msg)
+        a = msg[:len(frame)].decode('ascii')
+        print (a)
+        for char in a:
+            #print (char)
+           
+            if ((char) == '~' or (char) == '~'):
                 self._dev.write(b'}')
-                if (char == '~'):
+                if ((char) == '~'):
                     self._dev.write(b'^')
-                elif (char == '}'):
+                elif ((char) == '~'):
                     self._dev.write(b']')
             else:
-                self._dev.write(bytes(char, 'utf-8'))
+              
+                self._dev.write(bytes(char, 'ascii'))
+       
+        if (((bytes([msg[len(msg)-2]])) == b'~') or ((bytes([msg[len(msg)-2]])) == b'}')) :
+             self._dev.write(b'}')
+             if (bytes([msg[len(msg)-2]])) == b'~':
+                self._dev.write(b'^')
+             elif (bytes([msg[len(msg)-2]])) == b'}':
+                self._dev.write(b']')
+        else:
+            self._dev.write(bytes([msg[len(msg)-2]]))
+        
+       
+        if (((bytes([msg[len(msg)-1]])) == b'~') or ((bytes([msg[len(msg)-1]])) == b'}')) :
+            self._dev.write(b'}')
+            if (bytes([msg[len(msg)-1]])) == b'~':
+                    self._dev.write(b'^')
+            elif (bytes([msg[len(msg)-1]])) == b'}':
+                self._dev.write(b']')
+        else:
+            self._dev.write(bytes([msg[len(msg)-1]]))
+
+
+
         self._dev.write(b'~')
         
 
@@ -79,7 +113,8 @@ class Framing(poller.Layer):
              self.disable_timeout()
 
     def frame(self, frame):
-        self._frame = frame.decode()
+      
+        self._frame = frame.decode('ascii')
         return self._frame
         
 
@@ -91,10 +126,19 @@ class Framing(poller.Layer):
             self._framesize = 0
             self._received.clear()
         elif(byte == b'~' and self._framesize >= self._bytes_min):
+            print (self._received)
+            self._crc.clear()
+            self._crc.update(self._received)
+            if self._crc.check_crc():
+                print(self.frame(self._received[:self._framesize-2]))               
+            else:
+                print ("nemrolou")
             self.disable_timeout()
             self._state = "ocioso"
+
+            
             self._framesize = 0            
-            print(self.frame(self._received))
+           
             #self._top._notifyLayer(self.frame(self._received))
             self._received.clear()  
             
@@ -104,6 +148,7 @@ class Framing(poller.Layer):
         elif(byte == b'~' and self._framesize == 0):
             self._state = "rx"
         elif (byte != b'~' or byte != b'}'):
+            
             self._received.append(int.from_bytes(byte, 'big'))
             self._framesize = self._framesize+1
 
@@ -137,3 +182,4 @@ class Framing(poller.Layer):
 
     def getState(self):
         return self._state
+
