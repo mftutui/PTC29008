@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-#aaa
+
 
 import serial, sys, enum
 import poller
@@ -20,9 +20,11 @@ class Framing(poller.Layer):
         self.timeout = timeout
         self.base_timeout = timeout
         self.disable_timeout()
-        self._top = 1
-        self._bottom = 1
         self._crc = crc.CRC16(" ")
+        self._top = None
+
+    def setTop(self, top):
+        self._top = top
 
     def handle(self):
         byte = self._dev.read()
@@ -33,7 +35,7 @@ class Framing(poller.Layer):
         print('Timeout !')
         self.handle_fsm(None)
         
-    def send(self, frame, framesize):   
+    def send(self, frame):   
         self._crc.clear()
         self._crc.update(frame)
         msg = self._crc.gen_crc()
@@ -54,30 +56,7 @@ class Framing(poller.Layer):
                 self._dev.write(bytes([msg[i]]))
         
         self._dev.write(b'~')
-        # if (((bytes([msg[len(msg)-2]])) == b'~') or ((bytes([msg[len(msg)-2]])) == b'}')) :
-        #      self._dev.write(b'}')
-        #      if (bytes([msg[len(msg)-2]])) == b'~':
-        #         self._dev.write(b'^')
-        #      elif (bytes([msg[len(msg)-2]])) == b'}':
-        #         self._dev.write(b']')
-        # else:
-        #     self._dev.write(bytes([msg[len(msg)-2]]))
-        
        
-        # if (((bytes([msg[len(msg)-1]])) == b'~') or ((bytes([msg[len(msg)-1]])) == b'}')) :
-        #     self._dev.write(b'}')
-        #     if (bytes([msg[len(msg)-1]])) == b'~':
-        #             self._dev.write(b'^')
-        #     elif (bytes([msg[len(msg)-1]])) == b'}':
-        #         self._dev.write(b']')
-        # else:
-        #     self._dev.write(bytes([msg[len(msg)-1]]))
-        #self._dev.write(b'~')
-
-
-
-        
-        
 
     def  handle_fsm(self, byte):
 
@@ -91,13 +70,6 @@ class Framing(poller.Layer):
         elif self._state == "esc":
             self._esc(byte)            
             
-    
-#    def receive(self):
-#        while self._completeframe == 0:
-#            self.handle_fsm()
-#        received = self._received
-#        self._completeframe = 0
-#        return received
 
     def _ocioso(self, byte):
         
@@ -119,7 +91,8 @@ class Framing(poller.Layer):
         self._frame = frame.decode('ascii')
         return self._frame
         
-
+    def notifyLayer(self, dados):
+        self._top.receiveFromBottom(dados)
     def _rx(self, byte):     
         
         if (self._framesize > self._bytes_max):
@@ -132,7 +105,7 @@ class Framing(poller.Layer):
             self._crc.clear()
             self._crc.update(self._received)
             if self._crc.check_crc():
-                print(self.frame(self._received[:self._framesize-2]))               
+                self.notifyLayer(self._received[:self._framesize-2])              
             else:
                 print ("nemrolou")
             self.disable_timeout()
@@ -140,8 +113,6 @@ class Framing(poller.Layer):
 
             
             self._framesize = 0            
-           
-            #self._top._notifyLayer(self.frame(self._received))
             self._received.clear()  
             
 
@@ -178,9 +149,6 @@ class Framing(poller.Layer):
 
     def getRecebido(self):
         return self._received
-
-   
-        
 
     def getState(self):
         return self._state

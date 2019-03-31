@@ -75,10 +75,10 @@ class Layer(Callback):
             print(dados)
 
       def sendToLayer(self, dados):
-        self._bottom._print(dados);
+        pass
 
       def notifyLayer(self, dados):
-        self._top._print(dados)     
+        pass    
 
 class Poller:
   '''Classe Poller: um agendador de eventos que monitora objetos
