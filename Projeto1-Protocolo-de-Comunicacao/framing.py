@@ -35,17 +35,15 @@ class Framing(poller.Layer):
         print('Timeout !')
         self.handle_fsm(None)
         
-    def send(self, frame):   
+    def send(self, frame): 
+         
         self._crc.clear()
         self._crc.update(frame)
         msg = self._crc.gen_crc()
         self._dev.write(b'~')
-        print (bytes([msg[len(frame)]]))
-        a = msg[:len(frame)].decode('ascii')
-        print (a)
+        
+       
         for i in range (len(msg)):
-            #print (char)
-           
             if (bytes([msg[i]]) == b'~' or bytes([msg[i]]) == b'}'):
                 self._dev.write(b'}')
                 if (bytes([msg[i]]) == b'~'):
@@ -83,8 +81,8 @@ class Framing(poller.Layer):
             self._state = "rx"       
             self.enable_timeout()
         else:
-             self._state = "ocioso"
-             self.disable_timeout()
+            self._state = "ocioso"
+            self.disable_timeout()
 
     def frame(self, frame):
       
@@ -93,6 +91,7 @@ class Framing(poller.Layer):
         
     def notifyLayer(self, dados):
         self._top.receiveFromBottom(dados)
+
     def _rx(self, byte):     
         
         if (self._framesize > self._bytes_max):
@@ -101,10 +100,11 @@ class Framing(poller.Layer):
             self._framesize = 0
             self._received.clear()
         elif(byte == b'~' and self._framesize >= self._bytes_min):
-            print (self._received)
+            
             self._crc.clear()
             self._crc.update(self._received)
             if self._crc.check_crc():
+                
                 self.notifyLayer(self._received[:self._framesize-2])              
             else:
                 print ("nemrolou")
