@@ -6,11 +6,11 @@ import poller
 import crc
 
 class ARQ(poller.Layer):
-    ack_0  = 0x80
-    ack_1  = 0x88
-    dado_0 = 0x00
-    dado_1 = 0x08
-    protocolo = 0x00
+    ACK0  = 0x80
+    ACK1  = 0x88
+    DATA0 = 0x00
+    DATA1 = 0x08
+    bytePROTOCOL = 0x00
 
     def __init__(self, obj, timeout):
         self._top = sys.stdin
@@ -20,138 +20,117 @@ class ARQ(poller.Layer):
         self.base_timeout = timeout
         self.fd = obj
         self.disable_timeout()
-        self.N = 0
-        self.M = 0
-        self._quadro = bytearray()
-        self._dado = None
+        self._expDATA = 0
+        self._recvFromTOP = None
         self.flag = 0
     
     def sendACK0(self):
-        quadro_aux = bytearray()
-        quadro_aux.append(self.ack_0)
-        quadro_aux.append(self.protocolo)
-        self.sendToLayer(quadro_aux)
+        frameToBeSent = bytearray()
+        frameToBeSent.append(self.ACK0)
+        frameToBeSent.append(self.bytePROTOCOL)
+        self.sendToLayer(frameToBeSent)
     
     def sendACK1(self):
-        quadro_aux = bytearray()
-        quadro_aux.append(self.ack_1)
-        quadro_aux.append(self.protocolo)
-        self.sendToLayer(quadro_aux)
-         
+        frameToBeSent = bytearray()
+        frameToBeSent.append(self.ACK1)
+        frameToBeSent.append(self.bytePROTOCOL)
+        self.sendToLayer(frameToBeSent)
 
 
-
-    def montaQuadroZero(self,dado):
-        quadro_aux = bytearray()
-        quadro_aux.append(self.dado_0)
-        quadro_aux.append(self.protocolo)
-        for i in range (len(dado)):
-            quadro_aux.append(int.from_bytes(dado[i].encode('ascii'),'big'))
+    def sendDataZero(self,):
+        print ("Enviando mensagem 0")
+        frameToBeSent = bytearray()
+        frameToBeSent.append(self.DATA0)
+        frameToBeSent.append(self.bytePROTOCOL)
+        for i in range (len(self._recvFromTOP)):
+            frameToBeSent.append(int.from_bytes(self._recvFromTOP[i].encode('ascii'),'big'))
             
-        self.sendToLayer(quadro_aux)
-        print ("saiu do monta")       
-        
+        self.sendToLayer(frameToBeSent)
+
+
+    def sendDataOne(self):
+        print ("Enviando mensagem 1")
+        frameToBeSent = bytearray()
+        frameToBeSent.append(self.DATA1)
+        frameToBeSent.append(self.bytePROTOCOL)
+        for i in range (len(self._recvFromTOP)):
+            frameToBeSent.append(int.from_bytes(self._recvFromTOP[i].encode('ascii'),'big'))
+        self.sendToLayer(frameToBeSent)
+
 
     def setBottom(self, bottom):
         self._bottom = bottom
 
-    def sendToLayer(self, dados):       
-        self._bottom.send(dados)
+
+    def sendToLayer(self, frameToBeSent):
+        self._bottom.send(frameToBeSent)
         
         
 
     def handle(self):
         quadro = sys.stdin.readline()
         if self.flag != 1:
-            
-            self._dado = quadro[:-1]
-            self.handle_fsm(quadro[:-1])
+            self._recvFromTOP = quadro[:-1]
+            self.sendToBottom()
             self.flag = 1
-            self.enable_timeout()
-            print ("habilitou timeout")
-        
-      
-    
-    def montaQuadroOne(self, dado):        
-        quadro_aux = bytearray()
-        quadro_aux.append(self.dado_1)
-        quadro_aux.append(self.protocolo)
-        for i in range (len(dado)):
-            quadro_aux.append(int.from_bytes(dado[i].encode('ascii'),'big'))
-            
-        self.sendToLayer(quadro_aux) 
-        print ("saiu do monta")       
-               
-       
 
-    def _stateZero(self, quadro):
-            print("entrou func zero")
-            self.montaQuadroZero(quadro)   
-                     
-            
-           
-    
-    def _stateOne(self, quadro):
-            print("entrou func1")
-            self.montaQuadroOne(quadro)
-            
-            
-           
-
-    def handle_fsm(self,quadro):
-        
-        if self._state == False:
-            self._stateZero(quadro)
-        elif self._state == True:
-            self._stateOne(quadro)
 
     def handle_timeout(self):
-        
-        print ("ACK NÃO RECEBIDO...")
-        print ("Enviando:", self._dado)
-
+        print ("Timeout!")
         if self._state == False:
-            self.montaQuadroZero(self._dado)
+            print ("ACK0 não recebido. Reenviando mensagem 0")
+            self.sendToBottom()
         elif self._state == True:
-            self.montaQuadroOne(self._dado)
-        
+            print ("ACK1 não recebido. Reenviando mensagem 1")
+            self.sendToBottom()
+
+    def sendToBottom(self):
+        if self._state == False:
+            self.sendDataZero()
+        elif self._state == True:
+            self.sendDataOne()
+
+        self.enable_timeout()
     
-    def receiveFromBottom(self, dados):
-        if dados[0] == self.dado_0:
-            if self.M == 0:
-                print(dados[2:].decode('ascii'))
-                self.M = 1
-                self.sendACK0()               
-            elif self.M == 1:
+    def receiveFromBottom(self, recvFromFraming):
+        if recvFromFraming[0] == self.DATA0:
+            if self._expDATA == 0:
+                print ("Mensagem 0 recebida:")
+                print(recvFromFraming[2:].decode('ascii'))
+                self._expDATA = 1
+                self.sendACK0()
+            elif self._expDATA == 1:
                 self.sendACK0()
                 
-        elif dados[0] == self.dado_1:
-            if self.M == 1:
-                print(dados[2:].decode('ascii'))
-                self.M = 0
+        elif recvFromFraming[0] == self.DATA1:
+            if self._expDATA == 1:
+                print ("Mensagem 1 recebida:")
+                print(recvFromFraming[2:].decode('ascii'))
+                self._expDATA = 0
                 self.sendACK1()
-            elif self.M == 0:
+            elif self._expDATA == 0:
                 self.sendACK1()
 
-        elif dados[0] == self.ack_0:
+        elif recvFromFraming[0] == self.ACK0:
             if self._state == False:
-                print("ack 0 recebido ")
+                print ("Receptor informou que recebeu a mensagem 0. Desabilitando timeout")
                 self.disable_timeout()
-                print("timeout desabilitado")
                 self.flag = 0
                 self._state = True
-            elif self._state == True:
-                self.montaQuadroOne(self._dado)
-               
+            else:
+                print ("Receptor informou que recebeu a mensagem 0 porem ele deveria receber mensagem 1.")
+                self.sendDataOne()
+                self.enable_timeout()
+
         
-        elif dados[0] == self.ack_1:
+        elif recvFromFraming[0] == self.ACK1:
             if self._state == True:
-                print("ack 1 recebido ")
+                print ("Receptor informou que receboe a mensagem 1. Desabilitando timeout")
                 self.disable_timeout()
-                print("timeout desabilitade")                
                 self._state = False
                 self.flag = 0
-            elif self._state == False:                
-                self.montaQuadroZero(self._dado)
-              
+            else:
+                print ("Receptor informou que recebeu a mensagem 1 porem ele deveria receber mensagem 0.")
+                self.sendDataZero()
+                self.enable_timeout()
 

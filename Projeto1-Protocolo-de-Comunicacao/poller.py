@@ -145,7 +145,8 @@ class Protocolo():
             self._layers.append(layer)
 
       def start(self):
-            self._poller.despache()
+          print ("Sistema iniciado! Digite uma mensagem para ser enviada:")
+          self._poller.despache()
 
             
             
