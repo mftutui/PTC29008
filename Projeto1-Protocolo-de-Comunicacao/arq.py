@@ -15,7 +15,7 @@ class ARQ(poller.Layer):
     def __init__(self, obj, timeout):
         self._top = sys.stdin
         self._bottom = None
-        self._state = False        
+        self._state = 0
         self.timeout = timeout
         self.base_timeout = timeout
         self.fd = obj
@@ -23,6 +23,7 @@ class ARQ(poller.Layer):
         self._expDATA = 0
         self._recvFromTOP = None
         self.flag = 0
+        self._DATAN = False
     
     def sendACK0(self):
         frameToBeSent = bytearray()
@@ -69,7 +70,7 @@ class ARQ(poller.Layer):
 
     def handle(self):
         quadro = sys.stdin.readline()
-        if self.flag != 1:
+        if self._state!= 1:
             self._recvFromTOP = quadro[:-1]
             self.sendToBottom()
             self.flag = 1
@@ -77,20 +78,20 @@ class ARQ(poller.Layer):
 
     def handle_timeout(self):
         print ("Timeout!")
-        if self._state == False:
+        if self._DATAN == False:
             print ("ACK0 não recebido. Reenviando mensagem 0")
             self.sendToBottom()
-        elif self._state == True:
+        elif self._DATAN == True:
             print ("ACK1 não recebido. Reenviando mensagem 1")
             self.sendToBottom()
 
     def sendToBottom(self):
-        if self._state == False:
+        if self._DATAN == False:
             self.sendDataZero()
-        elif self._state == True:
+        elif self._DATAN == True :
             self.sendDataOne()
-
         self.enable_timeout()
+        self._state = 1
     
     def receiveFromBottom(self, recvFromFraming):
         if recvFromFraming[0] == self.DATA0:
@@ -111,26 +112,52 @@ class ARQ(poller.Layer):
             elif self._expDATA == 0:
                 self.sendACK1()
 
-        elif recvFromFraming[0] == self.ACK0:
-            if self._state == False:
-                print ("Receptor informou que recebeu a mensagem 0. Desabilitando timeout")
-                self.disable_timeout()
-                self.flag = 0
-                self._state = True
-            else:
-                print ("Receptor informou que recebeu a mensagem 0 porem ele deveria receber mensagem 1.")
-                self.sendDataOne()
-                self.enable_timeout()
+        elif self._state == 1:
+            if self._DATAN == False:
+                if recvFromFraming[0] == self.ACK0:
+                    print ("Receptor informou que recebeu a mensagem 0. Desabilitando timeout")
+                    self.disable_timeout()
+                    self._state = 0
+                    self._DATAN = not self._DATAN
+                elif recvFromFraming[0] == self.ACK1:
+                    print ("Receptor informou que recebeu a mensagem 1 porem ele deveria receber mensagem 0.")
+                    self.sendDataZero()
+                    self.enable_timeout()
 
-        
-        elif recvFromFraming[0] == self.ACK1:
-            if self._state == True:
-                print ("Receptor informou que receboe a mensagem 1. Desabilitando timeout")
-                self.disable_timeout()
-                self._state = False
-                self.flag = 0
-            else:
-                print ("Receptor informou que recebeu a mensagem 1 porem ele deveria receber mensagem 0.")
-                self.sendDataZero()
-                self.enable_timeout()
+            elif self._DATAN == True:
+                if recvFromFraming[0] == self.ACK1:
+                    print ("Receptor informou que receboe a mensagem 1. Desabilitando timeout")
+                    self.disable_timeout()
+                    self._state = 0
+                    self._DATAN = not self._DATAN
+
+                elif recvFromFraming[0] == self.ACK0:
+                    print ("Receptor informou que recebeu a mensagem 0 porem ele deveria receber mensagem 1.")
+                    self.sendDataZero()
+                    self.enable_timeout()
+
+        # if recvFromFraming[0] == self.ACK0:
+        #     if self._DATAN == False:
+        #         print ("Receptor informou que recebeu a mensagem 0. Desabilitando timeout")
+        #         self.disable_timeout()
+        #
+        #         self._state = 0
+        #         self._DATAN = not self._DATAN
+        #     else:
+        #         print ("Receptor informou que recebeu a mensagem 0 porem ele deveria receber mensagem 1.")
+        #         self.sendDataOne()
+        #         self.enable_timeout()
+        #
+        #
+        # elif recvFromFraming[0] == self.ACK1:
+        #     if self._DATAN == True:
+        #         print ("Receptor informou que receboe a mensagem 1. Desabilitando timeout")
+        #         self.disable_timeout()
+        #         self._state = 0
+        #
+        #         self._DATAN = not self._DATAN
+        #     else:
+        #         print ("Receptor informou que recebeu a mensagem 1 porem ele deveria receber mensagem 0.")
+        #         self.sendDataZero()
+        #         self.enable_timeout()
 
