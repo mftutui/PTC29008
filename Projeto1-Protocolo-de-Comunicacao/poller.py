@@ -1,7 +1,10 @@
 #!/usr/bin/python3
 
 import selectors
-import time 
+import time
+import framing
+import arq
+import sys
 
     
 class Callback():
@@ -60,25 +63,21 @@ class Callback():
 
   
 class Layer(Callback):
-      def __init__(self, top=None, bottom=None):
-        self._top = top
-        self._bottom = bottom
-       
+  def __init__(self, top=None, bottom=None):
+    self._top = top
+    self._bottom = bottom
 
-      def handle(self):
-            pass
+  def handle(self):
+    pass
           
-      def handle_timeout(self):
-            pass
+  def handle_timeout(self):
+    pass
 
-      def _print(self, data):
-            print(data)
+  def sendToLayer(self, data):
+    pass
 
-      def sendToLayer(self, data):
-        pass
-
-      def notifyLayer(self, data):
-        pass    
+  def notifyLayer(self, data):
+    pass
 
 class Poller:
   '''Classe Poller: um agendador de eventos que monitora objetos
@@ -137,16 +136,18 @@ class Poller:
         if cb != cb_to: cb.update(dt)
 
 class Protocolo():
-      def __init__(self, poller):
-            self._poller = poller
-            self._layers = []
+  def __init__(self, serial):
+    self._poller = Poller()
+    self._arq = arq.ARQ(sys.stdin,5)
+    self._enq = framing.Framing(serial, 1, 1024, 3)
 
-      def addLayer(self, layer):
-            self._layers.append(layer)
-
-      def start(self):
-          print ("Sistema iniciado! Digite uma mensagem para ser enviada:")
-          self._poller.despache()
+  def start(self):
+    print ("Sistema iniciado! Digite uma mensagem para ser enviada:")
+    self._enq.setTop(self._arq)
+    self._arq.setBottom(self._enq)
+    self._poller.adiciona(self._enq)
+    self._poller.adiciona(self._arq)
+    self._poller.despache()
 
             
             

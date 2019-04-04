@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 
-import serial, sys, enum
 import poller
 import crc
+
 
 
 class Framing(poller.Layer):
@@ -18,7 +18,6 @@ class Framing(poller.Layer):
         self._dev = dev
         self._framesize = 0
         self._received = bytearray()
-        self._frame = ""
         self.fd = dev
         self.timeout = timeout
         self.base_timeout = timeout
@@ -63,13 +62,11 @@ class Framing(poller.Layer):
         elif self._state == self.rx:
             self._rx(byte)
         elif self._state == self.esc:
-            self._esc(byte)            
-            
+            self._esc(byte)
 
     def _idle(self, byte):        
         if byte is None:
             self._received.clear()
-            self._frame = ""
             self._framesize = 0
             self.disable_timeout()            
         elif((byte == b'~') and (self._framesize == 0)):
@@ -79,10 +76,6 @@ class Framing(poller.Layer):
             self._state = self.idle
             self.disable_timeout()
 
-    def frame(self, frame):      
-        self._frame = frame.decode('ascii')
-        return self._frame
-        
     def notifyLayer(self, data):
         self._top.receiveFromBottom(data)
 
@@ -96,8 +89,7 @@ class Framing(poller.Layer):
             self._crc.clear()
             self._crc.update(self._received)
             if self._crc.check_crc():                
-                self.notifyLayer(self._received[:self._framesize-2])              
-
+                self.notifyLayer(self._received[:self._framesize-2])
             self.disable_timeout()
             self._state = self.idle          
             self._framesize = 0            
@@ -109,7 +101,6 @@ class Framing(poller.Layer):
         elif (byte != b'~' or byte != b'}'):            
             self._received.append(int.from_bytes(byte, 'big'))
             self._framesize = self._framesize+1
-
 
     def _esc(self, byte):
        if(byte == b'~' or byte == b'}'):
