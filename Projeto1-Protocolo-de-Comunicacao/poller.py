@@ -2,8 +2,6 @@
 
 import selectors
 import time
-import framing
-import arq
 import sys
 
     
@@ -61,15 +59,14 @@ class Callback():
       'true se este callback for um timer'
       return self.fd == None
 
-  
 class Layer(Callback):
+ 
   def __init__(self, top=None, bottom=None):
     self._top = top
     self._bottom = bottom
 
   def handle(self):
     pass
-          
   def handle_timeout(self):
     pass
 
@@ -79,7 +76,7 @@ class Layer(Callback):
   def notifyLayer(self, data):
     pass
 
-class Poller:
+class Poller():
   '''Classe Poller: um agendador de eventos que monitora objetos
   do tipo arquivo e executa callbacks quando tiverem dados para 
   serem lidos. Callbacks devem ser registrados para que 
@@ -137,6 +134,8 @@ class Poller:
 
 class Protocolo():
   def __init__(self, serial):
+    import arq
+    import framing
     self._poller = Poller()
     self._arq = arq.ARQ(sys.stdin,5)
     self._enq = framing.Framing(serial, 1, 1024, 3)
