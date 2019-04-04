@@ -133,7 +133,7 @@ class ARQ(poller.Layer):
 
                 elif recvFromFraming[0] == self.ACK0:
                     print ("Receptor informou que recebeu a mensagem 0 porem ele deveria receber mensagem 1.")
-                    self.sendDataZero()
+                    self.sendDataOne()
                     self.enable_timeout()
 
         # if recvFromFraming[0] == self.ACK0:

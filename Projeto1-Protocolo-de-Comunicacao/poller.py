@@ -71,13 +71,13 @@ class Layer(Callback):
       def handle_timeout(self):
             pass
 
-      def _print(self, dados):
-            print(dados)
+      def _print(self, data):
+            print(data)
 
-      def sendToLayer(self, dados):
+      def sendToLayer(self, data):
         pass
 
-      def notifyLayer(self, dados):
+      def notifyLayer(self, data):
         pass    
 
 class Poller:
