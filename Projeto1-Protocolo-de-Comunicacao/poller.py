@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 
 import selectors
-import time 
+import time
+import sys
 
     
-class Callback():
-  '''Classe Callback:
+class Callback:
+      '''Classe Callback:
         
         Define uma classe base para os callbacks
         a serem usados pelo Poller. Cada objeto Callback
@@ -22,8 +23,10 @@ class Callback():
       um descritor de arquivo numérico.
       timeout: valor de timeout em segundos, podendo ter parte 
       decimal para expressar fração de segundo'''
+      if timeout < 0: raise ValueError('timeout negativo')
       self.fd = fileobj
       self.timeout = timeout
+      self._enabled_to = True
       self.base_timeout = timeout
 
   def handle(self):
@@ -47,41 +50,41 @@ class Callback():
 
   def disable_timeout(self):
       'Desativa o timeout'
-      if self.base_timeout > 0: self.base_timeout = -self.base_timeout
+      self._enabled_to = False
 
   def enable_timeout(self):
       'Reativa o timeout'
-      if self.base_timeout < 0: self.base_timeout = -self.base_timeout
+      self._enabled_to = True
 
+  @property
+  def timeout_enabled(self):
+      return self._enabled_to
+  
   @property
   def isTimer(self):
       'true se este callback for um timer'
       return self.fd == None
 
-  
+
 class Layer(Callback):
-      def __init__(self, top=None, bottom=None):
-        self._top = top
-        self._bottom = bottom
-       
+ 
+  def __init__(self, top=None, bottom=None):
+    self._top = top
+    self._bottom = bottom
 
-      def handle(self):
-            pass
-          
-      def handle_timeout(self):
-            pass
+  def handle(self):
+    pass
+  def handle_timeout(self):
+    pass
 
-      def _print(self, dados):
-            print(dados)
+  def sendToLayer(self, data):
+    pass
 
-      def sendToLayer(self, dados):
-        self._bottom._print(dados);
-
-      def notifyLayer(self, dados):
-        self._top._print(dados)     
+  def notifyLayer(self, data):
+    pass
 
 class Poller:
-  '''Classe Poller: um agendador de eventos que monitora objetos
+      '''Classe Poller: um agendador de eventos que monitora objetos
   do tipo arquivo e executa callbacks quando tiverem dados para 
   serem lidos. Callbacks devem ser registrados para que 
   seus fileobj sejam monitorados. Callbacks que não possuem
@@ -98,7 +101,9 @@ class Poller:
       self.sched.register(cb.fd, selectors.EVENT_READ, cb)
 
   def _compareTimeout(self, cb, cb_to):
-    if not cb_to: cb_to = cb
+    if not cb.timeout_enabled: return cb_to
+    if not cb_to:
+        cb_to = cb
     elif cb_to.timeout > cb.timeout:
       cb_to = cb
     return cb_to
@@ -119,11 +124,15 @@ class Poller:
     'Espera por um único evento, tratando-o com seu callback'
     t1 = time.time()
     cb_to = self._timeout()
-    eventos = self.sched.select(cb_to.timeout)
+    if cb_to != None:
+        tout = cb_to.timeout
+    else:
+        tout = None
+    eventos = self.sched.select(tout)
     if not eventos: # timeout !
-      if cb_to.base_timeout > 0:
-        cb_to.handle_timeout()
-        cb_to.reload_timeout()
+      if cb_to != None:
+          cb_to.handle_timeout()
+          cb_to.reload_timeout()
     else:
       for key,mask in eventos:
         cb = key.data # este é o callback !
@@ -136,16 +145,22 @@ class Poller:
         cb = key.data
         if cb != cb_to: cb.update(dt)
 
+
 class Protocolo():
-      def __init__(self, poller):
-            self._poller = poller
-            self._layers = []
+  def __init__(self, serial):
+    import arq
+    import framing
+    self._poller = Poller()
+    self._arq = arq.ARQ(sys.stdin,5)
+    self._enq = framing.Framing(serial, 1, 1024, 3)
 
-      def addLayer(self, layer):
-            self._layers.append(layer)
-
-      def start(self):
-            self._poller.despache()
+  def start(self):
+    print ("Sistema iniciado! Digite uma mensagem para ser enviada:")
+    self._enq.setTop(self._arq)
+    self._arq.setBottom(self._enq)
+    self._poller.adiciona(self._enq)
+    self._poller.adiciona(self._arq)
+    self._poller.despache()
 
             
             

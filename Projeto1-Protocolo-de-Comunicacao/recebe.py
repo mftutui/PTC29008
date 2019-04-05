@@ -1,14 +1,9 @@
-import serial, sys, enum
-from framing import Framing
+import serial
 import poller
-import sys,time
+
 
 if __name__ == '__main__':
-    dev = serial.Serial('/dev/pts/14')
-
-    enq = Framing(dev, 1, 1024, 1)
-    sched = poller.Poller()
-    proto = poller.Protocolo(sched)
-    proto._poller.adiciona(enq)
+    dev = serial.Serial('/dev/pts/3')
+    proto = poller.Protocolo(dev)
     proto.start()
     

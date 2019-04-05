@@ -1,34 +1,10 @@
-import serial, sys, enum
-from framing import Framing
-import string, random
+import serial
+import poller
 
 if __name__ == '__main__':
-    dev = serial.Serial('/dev/pts/15')
-    
-    framesize = random.randint(1,15)
-    quadro = ""
-    i = 0
-    print (framesize)
-    while i < framesize:
-        aux = random.randint(1,3)
-        if aux == 1:
-            a = random.choice(string.ascii_letters)
-            quadro = quadro + a
-            i = i + 1
-        elif aux == 2:
-            a = random.choice(string.digits)
-            quadro = quadro + a
-            i = i + 1
-        elif aux == 3:
-            a = random.choice(string.punctuation)
-            quadro = quadro + a
-            i = i + 1
-        
-    enq = Framing(dev, 1, 1024, 3)
-    print (quadro)
-    enq.send(bytes(quadro, 'ascii'), len(quadro))
-    
- 
-    
-       
+    dev = serial.Serial('/dev/pts/2')
+    proto = poller.Protocolo(dev)
+    proto.start()
+
+
 
