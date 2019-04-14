@@ -6,17 +6,6 @@ import sys
 
     
 class Callback:
-      '''Classe Callback:
-        
-        Define uma classe base para os callbacks
-        a serem usados pelo Poller. Cada objeto Callback
-        contém um fileobj e um valor para timeout.
-        Se fileobj for None, então o callback define 
-        somente um timer.
-        Esta classe DEVE ser especializada para que
-        possa executar as ações desejadas para o tratamento
-        do evento detectado pelo Poller.'''
-
   def __init__(self, fileobj=None, timeout=0):
       '''Cria um objeto Callback. 
       fileobj: objeto tipo arquivo, podendo ser inclusive 
@@ -66,6 +55,7 @@ class Callback:
       return self.fd == None
 
 
+
 class Layer(Callback):
  
   def __init__(self, top=None, bottom=None):
@@ -84,12 +74,6 @@ class Layer(Callback):
     pass
 
 class Poller:
-      '''Classe Poller: um agendador de eventos que monitora objetos
-  do tipo arquivo e executa callbacks quando tiverem dados para 
-  serem lidos. Callbacks devem ser registrados para que 
-  seus fileobj sejam monitorados. Callbacks que não possuem
-  fileobj são tratados como timers'''
-  
   def __init__(self):
     self.cbs_to = []
     self.sched = selectors.DefaultSelector()

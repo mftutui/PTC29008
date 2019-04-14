@@ -3,6 +3,7 @@
 
 import sys
 import poller
+import random
 
 
 class ARQ(poller.Layer):
@@ -11,11 +12,12 @@ class ARQ(poller.Layer):
     DATA0 = 0x00
     DATA1 = 0x08
     bytePROTOCOL = 0x00
+    timeSlot = .1
 
     def __init__(self, obj, timeout):
         self._top = sys.stdin
         self._bottom = None
-        self._state = False
+        self._state = 0
         self.timeout = timeout
         self.base_timeout = timeout
         self.fd = obj
@@ -46,6 +48,7 @@ class ARQ(poller.Layer):
             frameToBeSent.append(int.from_bytes(self._recvFromTOP[i].encode('ascii'),'big'))
             
         self.sendToLayer(frameToBeSent)
+  
 
 
     def sendDataOne(self):
@@ -56,6 +59,7 @@ class ARQ(poller.Layer):
         for i in range (len(self._recvFromTOP)):
             frameToBeSent.append(int.from_bytes(self._recvFromTOP[i].encode('ascii'),'big'))
         self.sendToLayer(frameToBeSent)
+    
 
 
     def setBottom(self, bottom):
@@ -69,35 +73,65 @@ class ARQ(poller.Layer):
 
     def handle(self):
         frame = sys.stdin.readline()
-        if self._state!= True:
+        if self._state == 0 :
             self._recvFromTOP = frame[:-1]
+            #self.reload_timeout()
             self.sendToBottom()
-
+            self._state = 1
+            self.enable_timeout()
 
     def handle_timeout(self):
-        print ("Timeout!")
-        if self._DATAN == False:
-            print ("ACK0 não recebido. Reenviando mensagem 0")
+        print ("Timeout ARQ!")       
+        self.arqTimeoutHandler()
+        
+
+
+    def arqTimeoutHandler(self):
+        print("Estado:", self._state)
+        if (self._state == 1):
+            backoff = self.generateBackoff()
+            if(backoff == 0):
+                self.sendToBottom()
+                self.reload_timeout()
+                self.enable_timeout()
+            else:
+                self._state = 3
+                self.changeTimeoutValue(int(backoff*self.timeSlot))
+                
+        elif (self._state == 2):
+            self._state = 0
+            self.reload_timeout()
+            self.disable_timeout()
+        elif (self._state == 3):
             self.sendToBottom()
-        elif self._DATAN == True:
-            print ("ACK1 não recebido. Reenviando mensagem 1")
-            self.sendToBottom()
+            self.changeTimeoutValue(5)            
+            self._state = 1
+        print ("Valor do timeout", self.timeout)
+            
+            
+
 
     def sendToBottom(self):
         if self._DATAN == False:
             self.sendDataZero()
         elif self._DATAN == True :
             self.sendDataOne()
-        self.enable_timeout()
-        self._state = True
+ 
+        
     
+    def generateBackoff(self):
+        return random.randint(100,100)
+
+    def changeTimeoutValue(self, timeout):
+        self.base_timeout = timeout
+
     def receiveFromBottom(self, recvFromFraming):
         if recvFromFraming[0] == self.DATA0:
             if self._expDATA == False:
                 print ("Mensagem 0 recebida:")
                 print(recvFromFraming[2:].decode('ascii'))
                 self._expDATA = True
-                self.sendACK0()
+                self.sendACK0()                        
             elif self._expDATA == True:
                 self.sendACK0()
                 
@@ -110,26 +144,53 @@ class ARQ(poller.Layer):
             elif self._expDATA == False:
                 self.sendACK1()
 
-        elif self._state == True:
+        elif self._state == 1:
             if self._DATAN == False:
                 if recvFromFraming[0] == self.ACK0:
                     print ("Receptor informou que recebeu a mensagem 0. Desabilitando timeout")
-                    self.disable_timeout()
-                    self._state = False
                     self._DATAN = not self._DATAN
+                    backoff = self.generateBackoff()
+                    if (backoff == 0):
+                        self._state = 0
+                        self.disable_timeout()
+                    else:
+                        self._state = 2
+                        self.changeTimeoutValue(backoff*self.timeSlot)
+                        self.enable_timeout()
+
                 elif recvFromFraming[0] == self.ACK1:
                     print ("Receptor informou que recebeu a mensagem 1 porem ele deveria receber mensagem 0.")
-                    self.sendDataZero()
-                    self.enable_timeout()
+                    backoff = self.generateBackoff()
+                    if(backoff == 0):
+                        self.sendDataZero()
+                        self.reload_timeout()
+                        self.enable_timeout()
+                    else:
+                        self._state = 3
+                        self.changeTimeoutValue(backoff*self.timeSlot)
+                        self.enable_timeout()
+                  
 
             elif self._DATAN == True:
                 if recvFromFraming[0] == self.ACK1:
-                    print ("Receptor informou que receboe a mensagem 1. Desabilitando timeout")
-                    self.disable_timeout()
-                    self._state = False
+                    print ("Receptor informou que recebeu a mensagem 1. Desabilitando timeout")
                     self._DATAN = not self._DATAN
+                    backoff = self.generateBackoff()
+                    if (backoff == 0):
+                        self._state = 0
+                        self.disable_timeout()
+                    else:
+                        self._state = 2
+                        self.changeTimeoutValue(backoff*self.timeSlot)
+                        self.enable_timeout()
 
                 elif recvFromFraming[0] == self.ACK0:
                     print ("Receptor informou que recebeu a mensagem 0 porem ele deveria receber mensagem 1.")
-                    self.sendDataOne()
-                    self.enable_timeout()
+                    if(backoff == 0):
+                        self.sendDataOne()
+                        self.reload_timeout()
+                        self.enable_timeout()
+                    else:
+                        self._state = 3
+                        self.changeTimeoutValue(backoff*self.timeSlot)
+                        self.enable_timeout()
