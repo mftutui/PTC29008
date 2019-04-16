@@ -131,16 +131,28 @@ class ARQ(poller.Layer):
 
     def changeTimeoutValue(self, timeout):
         self.base_timeout = timeout
-
+    
+    def disableBackoff(self):        
+        if(self._state == 2 or self._state == 3):
+            print ("Desabilitando backoff")
+            self.disable_timeout()
+            if self._state == 2:
+                self._state = 0
+            elif self._state == 3:
+                self._state = 1
+                        
     def receiveFromBottom(self, recvFromFraming):
         if recvFromFraming[0] == self.DATA0:
             if self._expDATA == False:
                 print ("Mensagem 0 recebida:")
                 print(recvFromFraming[2:].decode('ascii'))
                 self._expDATA = True
-                self.sendACK0()                        
+                self.sendACK0() 
+                self.disableBackoff()
             elif self._expDATA == True:
                 self.sendACK0()
+                self.disableBackoff()
+  
                 
         elif recvFromFraming[0] == self.DATA1:
             if self._expDATA == True:
@@ -148,8 +160,11 @@ class ARQ(poller.Layer):
                 print(recvFromFraming[2:].decode('ascii'))
                 self._expDATA = False
                 self.sendACK1()
+                self.disableBackoff()
             elif self._expDATA == False:
                 self.sendACK1()
+                self.disableBackoff()
+   
 
         elif self._state == 1:
             if self._DATAN == False:
