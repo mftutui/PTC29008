@@ -25,6 +25,7 @@ class ARQ(poller.Layer):
         self._expDATA = False
         self._recvFromTOP = None
         self._DATAN = False
+        self._initialTimeout = timeout
     
     def sendACK0(self):
         frameToBeSent = bytearray()
@@ -77,7 +78,7 @@ class ARQ(poller.Layer):
             self._recvFromTOP = frame[:-1]
             self.sendToBottom()
             self._state = 1
-            self.reload_timeout()
+            self.changeTimeoutValue(self._initialTimeout)
             self.enable_timeout()
 
     def handle_timeout(self):
@@ -94,7 +95,7 @@ class ARQ(poller.Layer):
             backoff = self.generateBackoff()
             if(backoff == 0):
                 self.sendToBottom()
-                self.reload_timeout()
+                self.changeTimeoutValue(self._initialTimeout)
                 self.enable_timeout()
             else:
                 self._state = 3
@@ -103,16 +104,16 @@ class ARQ(poller.Layer):
             print ("Estouro de backoff")
             print("Estado ao estourar o backoff:", self._state)
             self._state = 0
-            self.reload_timeout()
+            self.changeTimeoutValue(self._initialTimeout)
             self.disable_timeout()
         elif (self._state == 3):
             print ("Estouro de backoff")
             print ("Estado ao estourar o backoff:", self._state)
             self.sendToBottom()
-            self.reload_timeout()
+            self.changeTimeoutValue(self._initialTimeout)
             self._state = 1
         print("Estado atual:", self._state)
-        print("Timeout atual:", self.timeout)
+        print("Timeout atual:", self.base_timeout)
         print('\n')
             
 
@@ -169,7 +170,7 @@ class ARQ(poller.Layer):
                     backoff = self.generateBackoff()
                     if(backoff == 0):
                         self.sendDataZero()
-                        self.reload_timeout()
+                        self.changeTimeoutValue(self._initialTimeout)
                         self.enable_timeout()
                     else:
                         self._state = 3
@@ -195,7 +196,7 @@ class ARQ(poller.Layer):
                     backoff = self.generateBackoff()
                     if(backoff == 0):
                         self.sendDataOne()
-                        self.reload_timeout()
+                        self.changeTimeoutValue(self._initialTimeout)
                         self.enable_timeout()
                     else:
                         self._state = 3
