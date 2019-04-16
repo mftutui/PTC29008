@@ -116,7 +116,7 @@ class Poller:
     if not eventos: # timeout !
       if cb_to != None:
         cb_to.handle_timeout()
-          #cb_to.reload_timeout()
+        cb_to.reload_timeout()
 
     else:
       for key,mask in eventos:

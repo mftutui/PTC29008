@@ -129,7 +129,7 @@ class ARQ(poller.Layer):
         return random.randint(80,80)
 
     def changeTimeoutValue(self, timeout):
-        self.timeout = timeout
+        self.base_timeout = timeout
 
     def receiveFromBottom(self, recvFromFraming):
         if recvFromFraming[0] == self.DATA0:
