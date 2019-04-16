@@ -6,7 +6,7 @@ import sys
 
     
 class Callback:
-      '''Classe Callback:
+  '''Classe Callback:
         
         Define uma classe base para os callbacks
         a serem usados pelo Poller. Cada objeto Callback
@@ -66,6 +66,7 @@ class Callback:
       return self.fd == None
 
 
+
 class Layer(Callback):
  
   def __init__(self, top=None, bottom=None):
@@ -84,7 +85,7 @@ class Layer(Callback):
     pass
 
 class Poller:
-      '''Classe Poller: um agendador de eventos que monitora objetos
+  '''Classe Poller: um agendador de eventos que monitora objetos
   do tipo arquivo e executa callbacks quando tiverem dados para 
   serem lidos. Callbacks devem ser registrados para que 
   seus fileobj sejam monitorados. Callbacks que não possuem
@@ -128,23 +129,26 @@ class Poller:
         tout = cb_to.timeout
     else:
         tout = None
+    #print('--- tout=%s' % str(tout))
     eventos = self.sched.select(tout)
+    fired = set()
     if not eventos: # timeout !
       if cb_to != None:
+          fired.add(cb_to)
           cb_to.handle_timeout()
           cb_to.reload_timeout()
     else:
       for key,mask in eventos:
         cb = key.data # este é o callback !
+        fired.add(cb)
         cb.handle()
         cb.reload_timeout()
     dt = time.time() - t1
     for cb in self.cbs_to: 
-      if cb != cb_to: cb.update(dt)
+      if not cb in fired: cb.update(dt)
     for fd,key in self.sched.get_map().items():
         cb = key.data
-        if cb != cb_to: cb.update(dt)
-
+        if not cb in fired: cb.update(dt)
 
 class Protocolo():
   def __init__(self, serial):
