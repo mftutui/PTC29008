@@ -33,7 +33,7 @@ class Framing(poller.Layer):
         self.handle_fsm(byte)
         
     def handle_timeout(self):
-        print('Timeout !')
+        print('Timeout Framing!')
         self.handle_fsm(None)
         
     def send(self, frame):          

@@ -75,7 +75,7 @@ class ARQ(poller.Layer):
         frame = sys.stdin.readline()
         if self._state == 0 :
             self._recvFromTOP = frame[:-1]
-            #self.reload_timeout()
+            self.reload_timeout()
             self.sendToBottom()
             self._state = 1
             self.enable_timeout()
@@ -87,7 +87,7 @@ class ARQ(poller.Layer):
 
 
     def arqTimeoutHandler(self):
-        print("Estado:", self._state)
+        print("Estado ao estourar timeout:", self._state)
         if (self._state == 1):
             backoff = self.generateBackoff()
             if(backoff == 0):
@@ -97,17 +97,16 @@ class ARQ(poller.Layer):
             else:
                 self._state = 3
                 self.changeTimeoutValue(int(backoff*self.timeSlot))
-                
         elif (self._state == 2):
             self._state = 0
             self.reload_timeout()
             self.disable_timeout()
         elif (self._state == 3):
             self.sendToBottom()
-            self.changeTimeoutValue(5)            
+            self.reload_timeout()
             self._state = 1
-        print ("Valor do timeout", self.timeout)
-            
+        print("Estado atual:", self._state)
+        print("Timeout atual:", self.timeout)
             
 
 
@@ -123,7 +122,7 @@ class ARQ(poller.Layer):
         return random.randint(100,100)
 
     def changeTimeoutValue(self, timeout):
-        self.base_timeout = timeout
+        self.timeout = timeout
 
     def receiveFromBottom(self, recvFromFraming):
         if recvFromFraming[0] == self.DATA0:
@@ -147,7 +146,7 @@ class ARQ(poller.Layer):
         elif self._state == 1:
             if self._DATAN == False:
                 if recvFromFraming[0] == self.ACK0:
-                    print ("Receptor informou que recebeu a mensagem 0. Desabilitando timeout")
+                    print ("Receptor informou que recebeu a mensagem 0. Entrando no backoff")
                     self._DATAN = not self._DATAN
                     backoff = self.generateBackoff()
                     if (backoff == 0):
@@ -173,7 +172,7 @@ class ARQ(poller.Layer):
 
             elif self._DATAN == True:
                 if recvFromFraming[0] == self.ACK1:
-                    print ("Receptor informou que recebeu a mensagem 1. Desabilitando timeout")
+                    print ("Receptor informou que recebeu a mensagem 1. Entrando no backoff")
                     self._DATAN = not self._DATAN
                     backoff = self.generateBackoff()
                     if (backoff == 0):
@@ -186,6 +185,7 @@ class ARQ(poller.Layer):
 
                 elif recvFromFraming[0] == self.ACK0:
                     print ("Receptor informou que recebeu a mensagem 0 porem ele deveria receber mensagem 1.")
+                    backoff = self.generateBackoff()
                     if(backoff == 0):
                         self.sendDataOne()
                         self.reload_timeout()
