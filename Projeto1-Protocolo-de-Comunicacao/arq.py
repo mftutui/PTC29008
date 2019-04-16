@@ -75,20 +75,22 @@ class ARQ(poller.Layer):
         frame = sys.stdin.readline()
         if self._state == 0 :
             self._recvFromTOP = frame[:-1]
-            self.reload_timeout()
             self.sendToBottom()
             self._state = 1
+            self.reload_timeout()
             self.enable_timeout()
 
     def handle_timeout(self):
-        print ("Timeout ARQ!")       
+
         self.arqTimeoutHandler()
         
 
 
     def arqTimeoutHandler(self):
-        print("Estado ao estourar timeout:", self._state)
+
         if (self._state == 1):
+            print ("Estouro de timeout!")
+            print("Estado ao estourar timeout:", self._state)
             backoff = self.generateBackoff()
             if(backoff == 0):
                 self.sendToBottom()
@@ -98,15 +100,20 @@ class ARQ(poller.Layer):
                 self._state = 3
                 self.changeTimeoutValue(int(backoff*self.timeSlot))
         elif (self._state == 2):
+            print ("Estouro de backoff")
+            print("Estado ao estourar o backoff:", self._state)
             self._state = 0
             self.reload_timeout()
             self.disable_timeout()
         elif (self._state == 3):
+            print ("Estouro de backoff")
+            print ("Estado ao estourar o backoff:", self._state)
             self.sendToBottom()
             self.reload_timeout()
             self._state = 1
         print("Estado atual:", self._state)
         print("Timeout atual:", self.timeout)
+        print('\n')
             
 
 
@@ -119,7 +126,7 @@ class ARQ(poller.Layer):
         
     
     def generateBackoff(self):
-        return random.randint(100,100)
+        return random.randint(80,80)
 
     def changeTimeoutValue(self, timeout):
         self.timeout = timeout
