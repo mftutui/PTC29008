@@ -78,6 +78,7 @@ class ARQ(poller.Layer):
             self.sendToBottom()
             self._state = 1
             self.changeTimeoutValue(self._initialTimeout)
+            self.reload_timeout()
             self.enable_timeout()
 
     def handle(self):
@@ -87,6 +88,7 @@ class ARQ(poller.Layer):
             self.sendToBottom()
             self._state = 1
             self.changeTimeoutValue(self._initialTimeout)
+            self.reload_timeout()
             self.enable_timeout()
 
     def handle_timeout(self):
@@ -101,21 +103,25 @@ class ARQ(poller.Layer):
             if(backoff == 0):
                 self.sendToBottom()
                 self.changeTimeoutValue(self._initialTimeout)
+                self.reload_timeout()
                 self.enable_timeout()
             else:
                 self._state = 3
                 self.changeTimeoutValue(int(backoff*self.timeSlot))
+                self.reload_timeout()
         elif (self._state == 2):
             print ("Estouro de backoff")
             print("Estado ao estourar o backoff:", self._state)
             self._state = 0
             self.changeTimeoutValue(self._initialTimeout)
+            self.reload_timeout()
             self.disable_timeout()
         elif (self._state == 3):
             print ("Estouro de backoff")
             print ("Estado ao estourar o backoff:", self._state)
             self.sendToBottom()
             self.changeTimeoutValue(self._initialTimeout)
+            self.reload_timeout()
             self._state = 1
         print("Estado atual:", self._state)
         print("Timeout atual:", self.base_timeout)
@@ -135,20 +141,23 @@ class ARQ(poller.Layer):
         return random.randint(80,80)
 
     def changeTimeoutValue(self, timeout):
-        self.base_timeout = timeout
+        self.base_timeout = int(timeout)
     
     def disableBackoff(self):        
         if(self._state == 2 or self._state == 3):
-            print ("Desabilitando backoff")            
+            print ("Desabilitando backoff")      
+            self.disable_timeout()       
             if self._state == 2:
                 self._state = 0
                 self.changeTimeoutValue(self._initialTimeout)
-                self.disable_timeout()
-           
+                self.reload_timeout()
+                          
             elif self._state == 3:
                 self.sendToBottom()
                 self.changeTimeoutValue(self._initialTimeout)
+                self.reload_timeout()
                 self._state = 1
+                self.enable_timeout()
 
     def notifyLayer(self, data):
         self._top.receiveFromBottom(data)  
@@ -190,6 +199,7 @@ class ARQ(poller.Layer):
                     else:
                         self._state = 2
                         self.changeTimeoutValue(backoff*self.timeSlot)
+                        self.reload_timeout()
                         self.enable_timeout()
 
                 elif recvFromFraming[0] == self.ACK1:
@@ -198,10 +208,12 @@ class ARQ(poller.Layer):
                     if(backoff == 0):
                         self.sendDataZero()
                         self.changeTimeoutValue(self._initialTimeout)
+                        self.reload_timeout()
                         self.enable_timeout()
                     else:
                         self._state = 3
                         self.changeTimeoutValue(backoff*self.timeSlot)
+                        self.reload_timeout()
                         self.enable_timeout()
                   
 
@@ -216,6 +228,7 @@ class ARQ(poller.Layer):
                     else:
                         self._state = 2
                         self.changeTimeoutValue(backoff*self.timeSlot)
+                        self.reload_timeout()
                         self.enable_timeout()
 
                 elif recvFromFraming[0] == self.ACK0:
@@ -224,8 +237,10 @@ class ARQ(poller.Layer):
                     if(backoff == 0):
                         self.sendDataOne()
                         self.changeTimeoutValue(self._initialTimeout)
+                        self.reload_timeout()
                         self.enable_timeout()
                     else:
                         self._state = 3
                         self.changeTimeoutValue(backoff*self.timeSlot)
+                        self.reload_timeout()
                         self.enable_timeout()
