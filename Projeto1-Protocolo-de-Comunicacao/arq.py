@@ -139,6 +139,8 @@ class ARQ(poller.Layer):
             if self._state == 2:
                 self._state = 0
             elif self._state == 3:
+                self.sendToBottom()
+                self.changeTimeoutValue(self._initialTimeout)
                 self._state = 1
                         
     def receiveFromBottom(self, recvFromFraming):
