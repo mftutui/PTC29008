@@ -154,16 +154,21 @@ class Protocolo():
   def __init__(self, serial):
     import arq
     import framing
+    import gerencia
     self._poller = Poller()
-    self._arq = arq.ARQ(sys.stdin,5)
+    self._arq = arq.ARQ(5)
     self._enq = framing.Framing(serial, 1, 1024, 3)
+    self._ger = gerencia.GER(10)
 
   def start(self):
     print ("Sistema iniciado! Digite uma mensagem para ser enviada:")
     self._enq.setTop(self._arq)
     self._arq.setBottom(self._enq)
+    self._arq.setTop(self._ger)
+    self._ger.setBottom(self._arq)
     self._poller.adiciona(self._enq)
     self._poller.adiciona(self._arq)
+    self._poller.adiciona(self._ger)
     self._poller.despache()
 
             

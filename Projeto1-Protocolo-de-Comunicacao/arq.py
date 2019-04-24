@@ -14,13 +14,13 @@ class ARQ(poller.Layer):
     bytePROTOCOL = 0x00
     timeSlot = .1
 
-    def __init__(self, obj, timeout):
-        self._top = sys.stdin
+    def __init__(self, timeout):
+        self._top = None
         self._bottom = None
         self._state = 0
         self.timeout = timeout
         self.base_timeout = timeout
-        self.fd = obj
+        self.fd = None
         self.disable_timeout()
         self._expDATA = False
         self._recvFromTOP = None
@@ -62,15 +62,23 @@ class ARQ(poller.Layer):
         self.sendToLayer(frameToBeSent)
     
 
+    def setTop(self, top):
+        self._top = top
 
     def setBottom(self, bottom):
         self._bottom = bottom
-
 
     def sendToLayer(self, frameToBeSent):
         self._bottom.send(frameToBeSent)
         
         
+    def receiveFromTop(self, data):
+         if self._state == 0 :
+            self._recvFromTOP = data[:-1]
+            self.sendToBottom()
+            self._state = 1
+            self.changeTimeoutValue(self._initialTimeout)
+            self.enable_timeout()
 
     def handle(self):
         frame = sys.stdin.readline()
@@ -82,13 +90,10 @@ class ARQ(poller.Layer):
             self.enable_timeout()
 
     def handle_timeout(self):
-
-        self.arqTimeoutHandler()
-        
+        self.arqTimeoutHandler()      
 
 
     def arqTimeoutHandler(self):
-
         if (self._state == 1):
             print ("Estouro de timeout!")
             print("Estado ao estourar timeout:", self._state)
@@ -134,20 +139,25 @@ class ARQ(poller.Layer):
     
     def disableBackoff(self):        
         if(self._state == 2 or self._state == 3):
-            print ("Desabilitando backoff")
-            self.disable_timeout()
+            print ("Desabilitando backoff")            
             if self._state == 2:
                 self._state = 0
+                self.changeTimeoutValue(self._initialTimeout)
+                self.disable_timeout()
+           
             elif self._state == 3:
                 self.sendToBottom()
                 self.changeTimeoutValue(self._initialTimeout)
                 self._state = 1
-                        
+
+    def notifyLayer(self, data):
+        self._top.receiveFromBottom(data)  
+
     def receiveFromBottom(self, recvFromFraming):
         if recvFromFraming[0] == self.DATA0:
             if self._expDATA == False:
                 print ("Mensagem 0 recebida:")
-                print(recvFromFraming[2:].decode('ascii'))
+                self.notifyLayer(recvFromFraming[2:].decode('ascii'))
                 self._expDATA = True
                 self.sendACK0() 
                 self.disableBackoff()
@@ -159,7 +169,7 @@ class ARQ(poller.Layer):
         elif recvFromFraming[0] == self.DATA1:
             if self._expDATA == True:
                 print ("Mensagem 1 recebida:")
-                print(recvFromFraming[2:].decode('ascii'))
+                self.notifyLayer(recvFromFraming[2:].decode('ascii'))
                 self._expDATA = False
                 self.sendACK1()
                 self.disableBackoff()
