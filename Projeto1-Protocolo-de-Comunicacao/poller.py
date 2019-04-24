@@ -67,8 +67,7 @@ class Callback:
 
 
 
-class Layer(Callback):
- 
+class Layer(Callback): 
   def __init__(self, top=None, bottom=None):
     self._top = top
     self._bottom = bottom
@@ -166,6 +165,7 @@ class Protocolo():
     self._arq.setBottom(self._enq)
     self._arq.setTop(self._ger)
     self._ger.setBottom(self._arq)
+    # self._ger.connRequest()
     self._poller.adiciona(self._enq)
     self._poller.adiciona(self._arq)
     self._poller.adiciona(self._ger)
