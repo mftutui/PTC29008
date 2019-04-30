@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
 
-import poller
+import layer
 import crc
 
 
 
-class Framing(poller.Layer):
+class Framing(layer.Layer):
     idle = 1
     rx = 2
     esc = 3
@@ -24,6 +24,7 @@ class Framing(poller.Layer):
         self.disable_timeout()
         self._crc = crc.CRC16(" ")
         self._top = None
+        self.enable()
 
     def setTop(self, top):
         self._top = top

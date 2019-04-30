@@ -2,9 +2,7 @@
 
 import selectors
 import time
-import sys
 
-    
 class Callback:
   '''Classe Callback:
         
@@ -26,8 +24,9 @@ class Callback:
       if timeout < 0: raise ValueError('timeout negativo')
       self.fd = fileobj
       self.timeout = timeout
-      self._enabled_to = True
       self.base_timeout = timeout
+      self._enabled = True
+      self._enabled_to = True
 
   def handle(self):
       '''Trata o evento associado a este callback. Tipicamente 
@@ -56,6 +55,14 @@ class Callback:
       'Reativa o timeout'
       self._enabled_to = True
 
+  def enable(self):
+      'Reativa o monitoramento do descritor neste callback'
+      self._enabled = True
+
+  def disable(self):
+      'Desativa o monitoramento do descritor neste callback'
+      self._enabled = False
+
   @property
   def timeout_enabled(self):
       return self._enabled_to
@@ -65,24 +72,11 @@ class Callback:
       'true se este callback for um timer'
       return self.fd == None
 
-
-
-class Layer(Callback): 
-  def __init__(self, top=None, bottom=None):
-    self._top = top
-    self._bottom = bottom
-
-  def handle(self):
-    pass
-  def handle_timeout(self):
-    pass
-
-  def sendToLayer(self, data):
-    pass
-
-  def notifyLayer(self, data):
-    pass
-
+  @property
+  def isEnabled(self):
+      'true se monitoramento do descritor estiver ativado neste callback'
+      return self._enabled
+  
 class Poller:
   '''Classe Poller: um agendador de eventos que monitora objetos
   do tipo arquivo e executa callbacks quando tiverem dados para 
@@ -92,13 +86,12 @@ class Poller:
   
   def __init__(self):
     self.cbs_to = []
-    self.sched = selectors.DefaultSelector()
+    self.cbs = set()
 
   def adiciona(self, cb):
     'Registra um callback'
     if cb.isTimer and not cb in self.cbs_to: self.cbs_to.append(cb)
-    else:
-      self.sched.register(cb.fd, selectors.EVENT_READ, cb)
+    else: self.cbs.add(cb)
 
   def _compareTimeout(self, cb, cb_to):
     if not cb.timeout_enabled: return cb_to
@@ -111,14 +104,21 @@ class Poller:
   def _timeout(self):
     cb_to = None
     for cb in self.cbs_to: cb_to = self._compareTimeout(cb, cb_to)
-    for fd,key in self.sched.get_map().items():
-      cb_to = self._compareTimeout(key.data, cb_to)
+    for cb in self.cbs:
+      cb_to = self._compareTimeout(cb, cb_to)
     return cb_to
 
   def despache(self):
     '''Espera por eventos indefinidamente, tratando-os com seus
     callbacks'''
     while True: self.despache_simples()
+
+  def _get_events(self, timeout):
+    sched = selectors.DefaultSelector()
+    for cb in self.cbs:
+      if cb.isEnabled: sched.register(cb.fd, selectors.EVENT_READ, cb)
+    eventos = sched.select(timeout)
+    return eventos
 
   def despache_simples(self):
     'Espera por um único evento, tratando-o com seu callback'
@@ -128,8 +128,7 @@ class Poller:
         tout = cb_to.timeout
     else:
         tout = None
-    #print('--- tout=%s' % str(tout))
-    eventos = self.sched.select(tout)
+    eventos = self._get_events(tout)
     fired = set()
     if not eventos: # timeout !
       if cb_to != None:
@@ -145,31 +144,7 @@ class Poller:
     dt = time.time() - t1
     for cb in self.cbs_to: 
       if not cb in fired: cb.update(dt)
-    for fd,key in self.sched.get_map().items():
-        cb = key.data
-        if not cb in fired: cb.update(dt)
+    for cb in self.cbs:
+      if not cb in fired: cb.update(dt)
 
-class Protocolo():
-  def __init__(self, serial):
-    import arq
-    import framing
-    import gerencia
-    self._poller = Poller()
-    self._arq = arq.ARQ(5)
-    self._enq = framing.Framing(serial, 1, 1024, 3)
-    self._ger = gerencia.GER(10)
 
-  def start(self):
-    print ("Sistema iniciado! Digite uma mensagem para ser enviada:")
-    self._enq.setTop(self._arq)
-    self._arq.setBottom(self._enq)
-    self._arq.setTop(self._ger)
-    self._ger.setBottom(self._arq)
-    # self._ger.connRequest()
-    self._poller.adiciona(self._enq)
-    self._poller.adiciona(self._arq)
-    self._poller.adiciona(self._ger)
-    self._poller.despache()
-
-            
-            
