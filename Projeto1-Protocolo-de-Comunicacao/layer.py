@@ -25,15 +25,16 @@ class Protocolo():
     import gerencia
     self._poller = poller.Poller()
     self._arq = arq.ARQ(5)
-    self._ger = gerencia.GER(sys.stdin, 10)
+    self._ger = gerencia.GER(sys.stdin, 9)
     self._enq = framing.Framing(serial, 1, 1024, 3)
 
   def start(self):
-    print ("Sistema iniciado! Digite uma mensagem para ser enviada:")
+    print ("Estabelecendo conexão...")
     self._enq.setTop(self._arq)
     self._arq.setBottom(self._enq)
     self._arq.setTop(self._ger)
     self._ger.setBottom(self._arq)
+    self._ger.connRequest()
     self._poller.adiciona(self._enq)
     self._poller.adiciona(self._arq)
     self._poller.adiciona(self._ger)
