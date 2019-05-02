@@ -97,8 +97,10 @@ class GER(layer.Layer):
         if(self._state == self.HAND1):
             self.connRequest()
         elif(self._state == self.CONN):
+            print("Estou no CONN enviando kr")
             self.keepAliveRequest()
         elif(self._state == self.CHECK):
+            print("Estou no check enviando KR")
             self.keepAliveRequest()
 
 
@@ -130,18 +132,18 @@ class GER(layer.Layer):
                 self.reload_timeout()   
                 self.enable_timeout()             
                 print ("Conexão estabelecida")
-            elif (recvFromARQ[1] == self.CA and recvFromARQ[0] == self.byteGER):
-                print ("CA recebido. Indo para CONN")
-                self._state = self.CONN
-                self.changeTimeoutValue(self.checkInterval)
-                self.reload_timeout()
-                self.enable_timeout()
+            # elif (recvFromARQ[1] == self.CA and recvFromARQ[0] == self.byteGER):
+            #     print ("CA recebido. Indo para CONN")
+            #     self._state = self.CONN
+            #     self.changeTimeoutValue(self.checkInterval)
+            #     self.reload_timeout()
+            #     self.enable_timeout()
                 
 
         elif (self._state == self.CONN):
-            if(recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
-                self.connConfirm()
-            elif(recvFromARQ[1] == self.KR and recvFromARQ[0] == self.byteGER):
+            # if(recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
+            #     self.connConfirm()
+            if(recvFromARQ[1] == self.KR and recvFromARQ[0] == self.byteGER):
                 self.keepAliveConfirm()
                 self.disable_timeout()
             elif(recvFromARQ[0] == self.byteDATA):
@@ -159,6 +161,7 @@ class GER(layer.Layer):
                 self.reload_timeout()
                 self.enable()
             elif(recvFromARQ[1] == self.KC and recvFromARQ[0] == self.byteGER):
+                print ("Estou no check e recebi kc")
                 self._state = self.CONN
                 self.changeTimeoutValue(self.checkInterval)
                 self.reload_timeout()

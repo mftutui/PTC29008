@@ -131,7 +131,7 @@ class ARQ(layer.Layer):
         
     
     def generateBackoff(self):
-        return random.randint(50,50)
+        return random.randint(0,7)
 
     def changeTimeoutValue(self, timeout):
         self.base_timeout = timeout

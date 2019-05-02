@@ -23,10 +23,11 @@ class Callback:
       decimal para expressar fração de segundo'''
       if timeout < 0: raise ValueError('timeout negativo')
       self.fd = fileobj
-      self.timeout = timeout
+      self._timeout = timeout
       self.base_timeout = timeout
       self._enabled = True
       self._enabled_to = True
+      self._reloaded = False
 
   def handle(self):
       '''Trata o evento associado a este callback. Tipicamente 
@@ -41,11 +42,13 @@ class Callback:
 
   def update(self, dt):
       'Atualiza o tempo restante de timeout'
-      self.timeout = max(0, self.timeout - dt)
+      if not self._reloaded: self._timeout = max(0, self._timeout - dt)
+      else: self._reloaded = False
 
   def reload_timeout(self):
       'Recarrega o valor de timeout'
-      self.timeout = self.base_timeout
+      self._timeout = self.base_timeout
+      self._reloaded = True
 
   def disable_timeout(self):
       'Desativa o timeout'
@@ -62,6 +65,15 @@ class Callback:
   def disable(self):
       'Desativa o monitoramento do descritor neste callback'
       self._enabled = False
+
+  @property
+  def timeout(self):
+    return self._timeout
+
+  @timeout.setter
+  def timeout(self, tout):
+    self._timeout = tout
+    self._reloaded = True
 
   @property
   def timeout_enabled(self):
@@ -142,7 +154,7 @@ class Poller:
         cb.handle()
         cb.reload_timeout()
     dt = time.time() - t1
-    for cb in self.cbs_to: 
+    for cb in self.cbs_to:
       if not cb in fired: cb.update(dt)
     for cb in self.cbs:
       if not cb in fired: cb.update(dt)
