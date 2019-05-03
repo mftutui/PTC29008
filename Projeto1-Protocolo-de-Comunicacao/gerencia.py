@@ -83,6 +83,16 @@ class GER(layer.Layer):
     def setTop(self, top):
         self._top = top
 
+    def send(self, data):
+        if(self._state == self.CONN or self._state == self.CHECK or self._state == self.HALF1):    
+            frame = data
+            frameToBeSent = bytearray()
+            frameToBeSent.append(self.gerID)
+            frameToBeSent.append(self.byteDATA)
+            for i in range(len(frame) - 1):
+                frameToBeSent.append(int.from_bytes(frame[i].encode('ascii'), 'big'))
+            self.sendToLayer(frameToBeSent)
+
     def handle(self):
         if(self._state == self.CONN or self._state == self.CHECK or self._state == self.HALF1):    
             frame = sys.stdin.readline()
@@ -132,17 +142,17 @@ class GER(layer.Layer):
                 self.reload_timeout()   
                 self.enable_timeout()             
                 print ("Conexão estabelecida")
-            # elif (recvFromARQ[1] == self.CA and recvFromARQ[0] == self.byteGER):
-            #     print ("CA recebido. Indo para CONN")
-            #     self._state = self.CONN
-            #     self.changeTimeoutValue(self.checkInterval)
-            #     self.reload_timeout()
-            #     self.enable_timeout()
+            elif (recvFromARQ[1] == self.CA and recvFromARQ[0] == self.byteGER):
+                print ("CA recebido. Indo para CONN")
+                self._state = self.CONN
+                self.changeTimeoutValue(self.checkInterval)
+                self.reload_timeout()
+                self.enable_timeout()
                 
 
         elif (self._state == self.CONN):
-            # if(recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
-            #     self.connConfirm()
+            if(recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
+                self.connConfirm()
             if(recvFromARQ[1] == self.KR and recvFromARQ[0] == self.byteGER):
                 self.keepAliveConfirm()
                 self.disable_timeout()

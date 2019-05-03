@@ -15,13 +15,13 @@ class ARQ(layer.Layer):
     bytePROTOCOL = 0x00
     timeSlot = .1
 
-    def __init__(self, timeout):
+    def __init__(self, fd, timeout):
         self._top = None
         self._bottom = None
         self._state = 0
         self.timeout = timeout
         self.base_timeout = timeout
-        self.fd = None
+        self.fd = fd
         self.disable_timeout()
         self._expDATA = False
         self._recvFromTOP = bytearray()
