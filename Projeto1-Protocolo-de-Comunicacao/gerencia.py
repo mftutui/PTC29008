@@ -30,6 +30,7 @@ class GER(layer.Layer):
         self.disable_timeout()
         self._state = self.DISC
         self._initialTimeout = timeout
+        self._retries = 0
 
     
     def changeTimeoutValue(self, timeout):
@@ -83,6 +84,13 @@ class GER(layer.Layer):
     def setTop(self, top):
         self._top = top
 
+    def notifyError(self):
+        print("ARQ tentou reenviar a mensagem por 3 vezes consecutivas")
+        self._state = self.DISC
+        self.changeTimeoutValue(self._initialTimeout)
+        self.reload_timeout()
+        self.disable_timeout()
+    
     def send(self, data):
         if(self._state == self.CONN or self._state == self.CHECK or self._state == self.HALF1):    
             frame = data
@@ -94,24 +102,27 @@ class GER(layer.Layer):
             self.sendToLayer(frameToBeSent)
 
     def handle(self):
-        if(self._state == self.CONN or self._state == self.CHECK or self._state == self.HALF1):    
-            frame = sys.stdin.readline()
-            frameToBeSent = bytearray()
-            frameToBeSent.append(self.gerID)
-            frameToBeSent.append(self.byteDATA)
-            for i in range(len(frame) - 1):
-                frameToBeSent.append(int.from_bytes(frame[i].encode('ascii'), 'big'))
-            self.sendToLayer(frameToBeSent)
+        pass 
 
     def handle_timeout(self):
         if(self._state == self.HAND1):
             self.connRequest()
-        elif(self._state == self.CONN):
-            print("Estou no CONN enviando kr")
-            self.keepAliveRequest()
-        elif(self._state == self.CHECK):
-            print("Estou no check enviando KR")
-            self.keepAliveRequest()
+        if (self._retries < 3):
+            self._retries = self._retries + 1
+            if(self._state == self.CONN):
+                print("Estou no CONN enviando kr")
+                self.keepAliveRequest()
+            if(self._state == self.CHECK):
+                    print("Estou no check enviando KR")
+                    self.keepAliveRequest()
+        else:
+            self._state = self.DISC
+            self._retries = 0
+            self.changeTimeoutValue(self._initialTimeout)
+            self.reload_timeout()
+            self.disable_timeout()
+            print ("Estado GER", self._state)
+            
 
 
     def sendToLayer(self, data):
@@ -129,6 +140,20 @@ class GER(layer.Layer):
                 self.connConfirm()
                 self._state = self.HAND2
                 self.enable_timeout()
+
+        if (self._state == self.HAND2):
+            if (recvFromARQ[1] == self.CA and recvFromARQ[0] == self.byteGER):
+                self._state = self.CONN
+                self.changeTimeoutValue(self.checkInterval)
+                self.reload_timeout()   
+                self.enable_timeout()
+            elif (recvFromARQ[0] == self.byteDATA):
+                print(recvFromARQ.decode('ascii'))
+                self._state = self.CONN
+                self.changeTimeoutValue(self.checkInterval)
+                self.reload_timeout()
+                self.enable_timeout()
+
 
         elif (self._state == self.HAND1):
             if (recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
@@ -153,9 +178,8 @@ class GER(layer.Layer):
         elif (self._state == self.CONN):
             if(recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
                 self.connConfirm()
-            if(recvFromARQ[1] == self.KR and recvFromARQ[0] == self.byteGER):
+            elif(recvFromARQ[1] == self.KR and recvFromARQ[0] == self.byteGER):
                 self.keepAliveConfirm()
-                self.disable_timeout()
             elif(recvFromARQ[0] == self.byteDATA):
                 print(recvFromARQ.decode('ascii'))
                 self.changeTimeoutValue(self.checkInterval)
@@ -169,18 +193,19 @@ class GER(layer.Layer):
                 self._state = self.CONN
                 self.changeTimeoutValue(self.checkInterval)
                 self.reload_timeout()
-                self.enable()
+                self.enable_timeout()
             elif(recvFromARQ[1] == self.KC and recvFromARQ[0] == self.byteGER):
                 print ("Estou no check e recebi kc")
                 self._state = self.CONN
                 self.changeTimeoutValue(self.checkInterval)
                 self.reload_timeout()
-                self.enable()
+                self.enable_timeout()
             elif(recvFromARQ[0] == self.byteDATA):
                 print(recvFromARQ.decode('ascii'))
                 self._state = self.CONN
                 self.changeTimeoutValue(self.checkInterval)
                 self.reload_timeout()
-                self.enable()        
+                self.enable_timeout()      
+
         print("Estado atual GER:", self._state)
             

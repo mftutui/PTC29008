@@ -19,7 +19,7 @@ class Layer(poller.Callback):
   def notifyLayer(self, data):
     pass
 
-class fakeLayer(Layer):
+class FakeLayer(Layer):
   def __init__(self, fd, timeout):
         self._top = None
         self._bottom = None
@@ -58,7 +58,7 @@ class Protocolo():
     self._arq = arq.ARQ(None, 5)
     self._ger = gerencia.GER(None, 9)
     self._enq = framing.Framing(serial, 1, 1024, 3)
-    self._fake = fakeLayer(sys.stdin, 10)
+    self._fake = FakeLayer(sys.stdin, 10)
 
   def start(self):
     print ("Estabelecendo conexão...")

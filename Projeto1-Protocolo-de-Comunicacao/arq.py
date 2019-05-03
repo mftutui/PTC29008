@@ -69,6 +69,7 @@ class ARQ(layer.Layer):
         
 
     def receiveFromTop(self, data):
+         print(data)
          if self._state == 0 :
             self._recvFromTOP.clear()
             self._recvFromTOP = data
@@ -77,7 +78,7 @@ class ARQ(layer.Layer):
             self.changeTimeoutValue(self._initialTimeout)
             self.reload_timeout()
             self.enable_timeout()
-            self._top.disable
+            self._top.disable()
 
 
     def handle(self):
@@ -88,21 +89,30 @@ class ARQ(layer.Layer):
         
 
     def arqTimeoutHandler(self):
+        print(self._retries)
+        print("estado ao estourar timeout", self._state)         
         if (self._state == 1):
-            self._retries = self._retries + 1
-            #print ("Estouro de timeout!")
-            #print("Estado ao estourar timeout:", self._state)
-            backoff = self.generateBackoff()
-            if(backoff == 0):
-                self.sendToBottom()
-                self.changeTimeoutValue(self._initialTimeout)
-                self.reload_timeout()
-                self.enable_timeout()
+            if (self._retries < 3):
+                self._retries = self._retries + 1
+                print(self._retries)
+                backoff = self.generateBackoff()
+                if(backoff == 0):
+                    self.sendToBottom()
+                    self.changeTimeoutValue(self._initialTimeout)
+                    self.reload_timeout()
+                    self.enable_timeout()
+                else:
+                    self._state = 3
+                    self.changeTimeoutValue(int(backoff*self.timeSlot))
+                    self.reload_timeout()
+                    self.enable_timeout()
             else:
-                self._state = 3
-                self.changeTimeoutValue(int(backoff*self.timeSlot))
-                self.reload_timeout()
-                self.enable_timeout()
+                self._retries = 0
+                self._top.notifyError()
+                self._state = 0
+                self.changeTimeoutValue(self._initialTimeout)
+                self.disable_timeout()
+                self._top.enable()
         elif (self._state == 2):
             #print ("Estouro de backoff")
             #print("Estado ao estourar o backoff:", self._state)
@@ -156,6 +166,7 @@ class ARQ(layer.Layer):
         self._top.receiveFromBottom(data)
 
     def receiveFromBottom(self, recvFromFraming): 
+        print(recvFromFraming)
         if(recvFromFraming[1] == self._top.gerID):
             if recvFromFraming[0] == self.DATA0:
                 if self._expDATA == False:
