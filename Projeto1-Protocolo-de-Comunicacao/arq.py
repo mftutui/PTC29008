@@ -1,5 +1,9 @@
 #!/usr/bin/python3
+# -*- coding: utf-8 -*- 
 
+'''
+    ARQ 
+'''
 
 import sys
 import poller
@@ -8,6 +12,10 @@ import random
 
 
 class ARQ(layer.Layer):
+    '''
+    Classe responsável por garantir a entrega de quadros
+    e controlar o acesso ao meio
+    '''
     ACK0  = 0x80
     ACK1  = 0x88
     DATA0 = 0x00
@@ -16,6 +24,9 @@ class ARQ(layer.Layer):
     timeSlot = .1
 
     def __init__(self, fd, timeout):
+        ''' fd: descritor de arquivos da classe
+            timeout: intervalo de tempo para interrupção interna
+        '''
         self._top = None
         self._bottom = None
         self._state = 0
@@ -31,18 +42,24 @@ class ARQ(layer.Layer):
         self._retries = 0
     
     def sendACK0(self):
+        ''' Envia o quadro de ACK da mensagem 0
+        '''
         frameToBeSent = bytearray()
         frameToBeSent.append(self.ACK0)        
         frameToBeSent.append(self._top._gerID)
         self.sendToLayer(frameToBeSent)
     
     def sendACK1(self):
+        ''' Envia o quadro de ACK da mensagem 1
+        '''
         frameToBeSent = bytearray()
         frameToBeSent.append(self.ACK1)
         frameToBeSent.append(self._top._gerID)
         self.sendToLayer(frameToBeSent)
 
     def sendDataZero(self):
+        ''' Envia o quadro da mensagem 0
+        '''
         frameToBeSent = bytearray()
         frameToBeSent = self._recvFromTOP
         if (frameToBeSent[0] is not self.DATA0):
@@ -51,6 +68,8 @@ class ARQ(layer.Layer):
         
 
     def sendDataOne(self):
+        ''' Envia o quadro da mensagem 1 
+        '''
         frameToBeSent = bytearray()
         frameToBeSent = self._recvFromTOP
         if(frameToBeSent[0] is not self.DATA1):
@@ -58,17 +77,29 @@ class ARQ(layer.Layer):
         self.sendToLayer(frameToBeSent)  
 
     def setTop(self, top):
+        ''' Método para definir camada superior da classe arq
+            top: objeto da camada superior
+        '''
         self._top = top
 
     def setBottom(self, bottom):
+        ''' Método para definir camada inferior da classe arq
+            bottom: objeto da camada inferior
+        '''
         self._bottom = bottom
 
 
     def sendToLayer(self, frameToBeSent):
-        self._bottom.send(frameToBeSent)       
+        ''' Envia o frame a ser transmitido para a camada inferior
+            frameToBeSent: bytearray representando o frame a ser transmitido
+        '''  
+        self._bottom.receiveFromTop(frameToBeSent)       
         
 
     def receiveFromTop(self, data):
+        ''' Envia o quadro de dados para a camada inferior
+            data: bytearray representando o quadro a ser enviado
+        '''   
         if self._state == 0 :
             self._recvFromTOP.clear()
             self._recvFromTOP = data
@@ -86,7 +117,9 @@ class ARQ(layer.Layer):
     def handle_timeout(self):
         self.arqTimeoutHandler()       
 
-    def arqTimeoutHandler(self):      
+    def arqTimeoutHandler(self):
+        ''' Trata a interrupção interna devido ao timeout
+        '''      
         if (self._state == 1):
             if (self._retries < 3):
                 self._retries = self._retries + 1
@@ -122,18 +155,27 @@ class ARQ(layer.Layer):
             self._state = 1       
 
     def sendToBottom(self):
+        ''' Verifica qual mensagem (0 ou 1) será enviada
+        '''
         if self._DATAN == False:
             self.sendDataZero()
         elif self._DATAN == True :
             self.sendDataOne()
         
     def generateBackoff(self):
+        ''' Gera um numero inteiro para gerar um backoff
+        '''
         return random.randint(0,7)
 
     def changeTimeoutValue(self, timeout):
+        ''' Altera o valor do timeout do objeto
+            timeout: novo valor do timeout
+        '''
         self.base_timeout = timeout
     
-    def disableBackoff(self):        
+    def disableBackoff(self):
+        ''' Desabilita o backoff do objeto
+        '''        
         if(self._state == 2 or self._state == 3):  
             self.disable_timeout()
             if self._state == 2:
@@ -150,9 +192,15 @@ class ARQ(layer.Layer):
                 self.enable_timeout()
 
     def notifyLayer(self, data):
+        ''' Envia o frame recebido para a camada superior
+            data: bytearray representando o frame a ser enviado
+        ''' 
         self._top.receiveFromBottom(data)
 
-    def receiveFromBottom(self, recvFromFraming): 
+    def receiveFromBottom(self, recvFromFraming):
+        ''' Recebe um quadro da camada inferior
+            recvFromFraming: bytearray representando o quadro recebido
+        ''' 
         if(recvFromFraming[1] == self._top._gerID):
             if recvFromFraming[0] == self.DATA0:
                 if self._expDATA == False:
