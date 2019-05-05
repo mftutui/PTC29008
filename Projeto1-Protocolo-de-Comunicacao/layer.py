@@ -113,7 +113,7 @@ class Protocolo():
       import gerencia
       self._poller = poller.Poller()
       self._arq = arq.ARQ(None, 1)
-      self._ger = gerencia.GER(None,55,9)
+      self._ger = gerencia.GER(None,254,9)
       self._enq = framing.Framing(serial, 1, 1024, 3)
       self._fake = FakeLayer(sys.stdin, 10)
 
