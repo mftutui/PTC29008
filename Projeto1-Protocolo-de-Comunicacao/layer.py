@@ -8,6 +8,7 @@ Layer e Protocolo
 import poller
 import sys
 
+
 class Layer(poller.Callback):
     ''' 
     Classe abstrata herdeira de poller.Calback para acrescentar
@@ -112,7 +113,7 @@ class Protocolo():
       import gerencia
       self._poller = poller.Poller()
       self._arq = arq.ARQ(None, 1)
-      self._ger = gerencia.GER(None,254,9)
+      self._ger = gerencia.GER(None,254,10)
       self._enq = framing.Framing(serial, 1, 1024, 3)
       self._fake = FakeLayer(sys.stdin, 10)
 
@@ -135,7 +136,7 @@ class Protocolo():
         self._poller.adiciona(self._fake)
         self._poller.despache()
       except KeyboardInterrupt:
-        print("enviando DR")
+        print("enviando DR e encerrando a sessão")
         self._ger.disconRequest() 
         self._ger._state = self._ger.HALF1
     

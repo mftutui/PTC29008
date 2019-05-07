@@ -171,6 +171,7 @@ class GER(layer.Layer):
             else:
                 self.goToDisc()
         elif(self._state == self.HAND2):
+            print ("Erro hand2")
             self.goToDisc()        
         elif(self._state == self.CONN):
             self.keepAliveRequest()         
@@ -206,6 +207,10 @@ class GER(layer.Layer):
             data: bytearray representando o frame a ser enviado
         ''' 
         self._top.receiveFromBottom(data)
+    
+    def _reloadAndEnableTimeout(self):
+        self.reload_timeout()
+        self.enable_timeout()
 
     def _disc(self, recvFromARQ):
         if (recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
@@ -213,6 +218,7 @@ class GER(layer.Layer):
             self._state = self.HAND2
             self.changeTimeoutValue(self._initialTimeout)
             self._reloadAndEnableTimeout()
+
     def _hand1(self, recvFromARQ):
         if (recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
             self._retries = 0
@@ -220,9 +226,10 @@ class GER(layer.Layer):
         elif (recvFromARQ[1] == self.CC and recvFromARQ[0] == self.byteGER):
             self._state = self.CONN
             self._retries = 0
+            #self._botton._state = 0
+            self.connAccepted()
             self.changeTimeoutValue(self.checkInterval)
-            self._reloadAndEnableTimeout()   
-            self.connAccepted()          
+            self._reloadAndEnableTimeout()            
         elif (recvFromARQ[1] == self.CA and recvFromARQ[0] == self.byteGER):
             self._state = self.CONN
             self._retries = 0
@@ -272,7 +279,6 @@ class GER(layer.Layer):
             self._retries = 0
             self.changeTimeoutValue(self.checkInterval)
             self._reloadAndEnableTimeout()
-            self._retries = 0
         elif(recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
             self.disconRequest()
             self._retries = 0
@@ -285,10 +291,6 @@ class GER(layer.Layer):
             self._retries = 0
             self.changeTimeoutValue(self.checkInterval)
             self._reloadAndEnableTimeout()
-
-    def _reloadAndEnableTimeout(self):
-        self.reload_timeout()
-        self.enable_timeout()
 
     def _half1(self, recvFromARQ):
         if (recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
@@ -309,6 +311,8 @@ class GER(layer.Layer):
             self.goToDisc()
 
     def handle_fsm(self, recvFromARQ):
+        #print("Quadro recebido no gerenciamento", recvFromARQ)
+      
         ''' Recebe um quadro e faz o tratamento na máquina de estados 
             da classe
             recvFromARQ: bytearray representando o frame a ser enviado
