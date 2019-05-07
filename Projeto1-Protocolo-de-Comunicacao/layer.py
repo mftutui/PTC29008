@@ -130,7 +130,7 @@ class Protocolo():
         self._ger.setBottom(self._arq)
         self._ger.setTop(self._fake)
         self._fake.setBottom(self._ger)
-        self._ger.connRequest()
+        
         self._poller.adiciona(self._enq)
         self._poller.adiciona(self._arq)
         self._poller.adiciona(self._ger)
