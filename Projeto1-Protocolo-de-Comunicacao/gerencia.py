@@ -211,6 +211,8 @@ class GER(layer.Layer):
         self._top.receiveFromBottom(data)
 
     def handle_fsm(self, recvFromARQ):
+        print("Quadro recebido no gerenciamento", recvFromARQ)
+      
         ''' Recebe um quadro e faz o tratamento na máquina de estados 
             da classe
             recvFromARQ: bytearray representando o frame a ser enviado
@@ -222,6 +224,7 @@ class GER(layer.Layer):
                 self.enable_timeout()
         elif (self._state == self.HAND2):
             if (recvFromARQ[1] == self.CA and recvFromARQ[0] == self.byteGER):
+                print("Recebeu CA")
                 self._retries = 0
                 self._state = self.CONN
                 self.changeTimeoutValue(self.checkInterval)
@@ -235,6 +238,8 @@ class GER(layer.Layer):
                 self.reload_timeout()
                 self.enable_timeout()
             else:
+                print(recvFromARQ)
+                print("Recebeu CA")
                 self._retries = 0
                 self.notifyLayer(recvFromARQ[1:])
                 self._state = self.CONN
@@ -248,10 +253,12 @@ class GER(layer.Layer):
             elif (recvFromARQ[1] == self.CC and recvFromARQ[0] == self.byteGER):
                 self._state = self.CONN
                 self._retries = 0
+                self._bottom._state = 0
+                self.connAccepted()
+                print ("enviando ca", self._bottom._state)
                 self.changeTimeoutValue(self.checkInterval)
                 self.reload_timeout()   
-                self.enable_timeout()   
-                self.connAccepted()          
+                self.enable_timeout()             
             elif (recvFromARQ[1] == self.CA and recvFromARQ[0] == self.byteGER):
                 self._state = self.CONN
                 self._retries = 0
@@ -284,7 +291,6 @@ class GER(layer.Layer):
                 self.changeTimeoutValue(self.checkInterval)
                 self.reload_timeout()
                 self.enable_timeout()
-                self._retries = 0
             elif(recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
                 self.disconRequest()
                 self._retries = 0
@@ -304,7 +310,7 @@ class GER(layer.Layer):
                 self.disconConfirm()
                 self.goToDisc()
             elif (recvFromARQ[1] == self.KR and recvFromARQ[0] == self.byteGER):
-                self.disconRequest
+                self.disconRequest()
                 self._retries = 0
             else:
                 self._retries = 0
