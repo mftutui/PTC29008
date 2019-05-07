@@ -161,7 +161,7 @@ class GER(layer.Layer):
         self._retries = 0
         self.changeTimeoutValue(self._initialTimeout)
         self.reload_timeout()
-        self.disable_timeout()
+        self.disable_timeout()        
         print ("Estado GER", self._state) 
 
     def handle_timeout(self):
@@ -174,6 +174,7 @@ class GER(layer.Layer):
             else:
                 self.goToDisc()
         elif(self._state == self.HAND2):
+            print ("Erro hand2")
             self.goToDisc()        
         elif(self._state == self.CONN):
             self.keepAliveRequest()         
@@ -210,6 +211,15 @@ class GER(layer.Layer):
         ''' 
         self._top.receiveFromBottom(data)
 
+    def _disc(self, recvFromARQ):
+        if (recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
+            self.connConfirm()
+            self._state = self.HAND2
+            self.changeTimeoutValue(self._initialTimeout)
+            self.reload_timeout()   
+            self.enable_timeout()
+           
+
     def handle_fsm(self, recvFromARQ):
         print("Quadro recebido no gerenciamento", recvFromARQ)
       
@@ -218,10 +228,7 @@ class GER(layer.Layer):
             recvFromARQ: bytearray representando o frame a ser enviado
         '''    
         if (self._state == self.DISC):
-            if (recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
-                self.connConfirm()
-                self._state = self.HAND2
-                self.enable_timeout()
+            self._disc(recvFromARQ)
         elif (self._state == self.HAND2):
             if (recvFromARQ[1] == self.CA and recvFromARQ[0] == self.byteGER):
                 print("Recebeu CA")

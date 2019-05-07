@@ -136,8 +136,11 @@ class ARQ(layer.Layer):
                     self.reload_timeout()
                     self.enable_timeout()
             else:
-                self._retries = 0
+                self._retries = 0 
                 self._state = 0
+                self._DATAN = False
+                self._expDATA = False
+                print ("Erro arq")
                 self._top.notifyError()
                 self.changeTimeoutValue(self._initialTimeout)
                 self.disable_timeout()
@@ -150,10 +153,11 @@ class ARQ(layer.Layer):
             self._top.enable()
         elif (self._state == 3):
             self.sendToBottom()
+            self._state = 1   
             self.changeTimeoutValue(self._initialTimeout)
             self.reload_timeout()
             self.enable_timeout()
-            self._state = 1       
+                
 
     def sendToBottom(self):
         ''' Verifica qual mensagem (0 ou 1) será enviada
@@ -184,6 +188,7 @@ class ARQ(layer.Layer):
                 self._retries = 0
                 self.changeTimeoutValue(self._initialTimeout)
                 self.reload_timeout()
+                self.disable_timeout()
                 self._top.enable()
             elif self._state == 3:
                 self._state = 1
