@@ -1,10 +1,11 @@
 import serial
-import poller
+import layer
 
 if __name__ == '__main__':
-    dev = serial.Serial('/dev/pts/17')
-    proto = poller.Protocolo(dev)
-    proto.start()
+
+    dev = serial.Serial('/dev/pts/3')
+    proto = layer.Protocolo(dev)
+
 
 
 

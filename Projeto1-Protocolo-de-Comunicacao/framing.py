@@ -1,17 +1,28 @@
 #!/usr/bin/python3
+# -*- coding: utf-8 -*- 
 
+'''
+    Enquadramento
+'''
 
-import poller
+import layer
 import crc
 
-
-
-class Framing(poller.Layer):
+class Framing(layer.Layer):
+    '''
+    Classe responsável por enquadradar um quadro e transmitir via interface serial
+    '''
+    # Estados da máquina de estados desta classe
     idle = 1
     rx = 2
     esc = 3
 
     def __init__(self, dev, bytes_min, bytes_max, timeout):
+        ''' dev: interface serial para receber/enviar dados.
+            bytes_min: número mínimo de bytes do quadro.
+            bytes_max: número máximo de bytes do quadro.
+            timeout: intervalo de tempo para interrupção interna
+        '''
         self._bytes_min = bytes_min
         self._bytes_max = bytes_max
         self._state = self.idle
@@ -24,19 +35,30 @@ class Framing(poller.Layer):
         self.disable_timeout()
         self._crc = crc.CRC16(" ")
         self._top = None
+        self.enable()
 
     def setTop(self, top):
+        ''' Método para definir camada superior do enquadramento
+            top: objeto da camada superior
+        '''
         self._top = top
 
     def handle(self):
+        ''' Trata o evento de recebimento de bytes pela interface serial  
+        '''
         byte = self._dev.read()        
         self.handle_fsm(byte)
         
     def handle_timeout(self):
+        ''' Trata a interrupção interna devido ao timeout
+        '''
         print('Timeout Framing!')
         self.handle_fsm(None)
         
-    def send(self, frame):          
+    def receiveFromTop(self, frame):
+        ''' Envia o quadro de dados pela interface serial
+            frame: bytearray representando o quadro a ser enviado
+        '''         
         self._crc.clear()
         self._crc.update(frame)
         msg = self._crc.gen_crc()
@@ -54,6 +76,9 @@ class Framing(poller.Layer):
        
 
     def  handle_fsm(self, byte):
+        ''' Recebe um byte e faz seu tratamento na máquina de estados
+            byte: byte recebido pela interface serial
+        '''
         if byte == None:
             self._state = self.idle
             self._idle(None)            
@@ -64,7 +89,10 @@ class Framing(poller.Layer):
         elif self._state == self.esc:
             self._esc(byte)
 
-    def _idle(self, byte):        
+    def _idle(self, byte):
+        ''' Trata o byte quando a máquina de estados está no estado idle
+            byte: byte recebido pela interface serial
+        '''        
         if byte is None:
             self._received.clear()
             self._framesize = 0
@@ -77,9 +105,15 @@ class Framing(poller.Layer):
             self.disable_timeout()
 
     def notifyLayer(self, data):
+        ''' Envia o frame recebido para a camada superior
+            data: bytearray representando o frame recebido
+        '''
         self._top.receiveFromBottom(data)
 
-    def _rx(self, byte):             
+    def _rx(self, byte):
+        ''' Trata o byte quando a máquina de estados está no estado rx
+            byte: byte recebido pela interface serial
+        '''              
         if (self._framesize > self._bytes_max):
             self.disable_timeout()
             self._state = self.idle
@@ -88,7 +122,10 @@ class Framing(poller.Layer):
         elif(byte == b'~' and self._framesize >= self._bytes_min):            
             self._crc.clear()
             self._crc.update(self._received)
-            if self._crc.check_crc():                
+            if self._crc.check_crc():
+                # if(self._received[0] == 0x80):
+                #     print(self._received[2], self._received[3])
+
                 self.notifyLayer(self._received[:self._framesize-2])
             self.disable_timeout()
             self._state = self.idle          
@@ -103,26 +140,20 @@ class Framing(poller.Layer):
             self._framesize = self._framesize+1
 
     def _esc(self, byte):
-       if(byte == b'~' or byte == b'}'):
+        ''' Trata o byte quando a máquina de estados está no estado rx
+            byte: byte recebido pela interface serial
+        '''
+        if(byte == b'~' or byte == b'}'):
            self._received.clear()
            self._framesize = 0
            self._state = self.idle
            self.disable_timeout()
-       elif(byte == b'^'):
+        elif(byte == b'^'):
            self._received.append(int.from_bytes(b'~', 'big'))
            self._framesize = self._framesize + 1
            self._state = self.rx
-       elif(byte == b']'):
+        elif(byte == b']'):
            self._received.append(int.from_bytes(b'}', 'big'))
            self._framesize = self._framesize + 1
            self._state = self.rx
-           
-    def getDev(self):
-        return self._dev
-
-    def getRecebido(self):
-        return self._received
-
-    def getState(self):
-        return self._state
 
