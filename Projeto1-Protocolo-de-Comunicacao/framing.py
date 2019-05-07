@@ -122,7 +122,10 @@ class Framing(layer.Layer):
         elif(byte == b'~' and self._framesize >= self._bytes_min):            
             self._crc.clear()
             self._crc.update(self._received)
-            if self._crc.check_crc():                
+            if self._crc.check_crc():
+                # if(self._received[0] == 0x80):
+                #     print(self._received[2], self._received[3])
+
                 self.notifyLayer(self._received[:self._framesize-2])
             self.disable_timeout()
             self._state = self.idle          
