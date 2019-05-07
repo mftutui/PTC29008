@@ -13,7 +13,6 @@ class Layer(poller.Callback):
     Classe abstrata herdeira de poller.Calback para acrescentar
     camadas ao protocolo
     '''
-       
     def __init__(self):
       self._top = None
       self._bottom = None

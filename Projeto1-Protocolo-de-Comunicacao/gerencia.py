@@ -1,5 +1,5 @@
-    #!/usr/bin/python3
-    # -*- coding: utf-8 -*- 
+#!/usr/bin/python3
+# -*- coding: utf-8 -*- 
 
 '''
     Gerenciamento de sessão
@@ -7,7 +7,6 @@
 
 import layer
 import sys
-
 
 class GER(layer.Layer):
     '''
@@ -103,8 +102,7 @@ class GER(layer.Layer):
         self._state = self.CHECK
         self.sendToLayer(frameToBeSent)
         self.changeTimeoutValue(self._initialTimeout)
-        self.reload_timeout()
-        self.enable_timeout()
+        self._reloadAndEnableTimeout()
     
     def keepAliveConfirm(self):
         ''' Monta o quadro com a mensagem de confirmação de keep-alive
@@ -160,8 +158,7 @@ class GER(layer.Layer):
         self._state = self.DISC
         self._retries = 0
         self.changeTimeoutValue(self._initialTimeout)
-        self.reload_timeout()
-        self.disable_timeout()
+        self._reloadAndEnableTimeout()
         print ("Estado GER", self._state) 
 
     def handle_timeout(self):
@@ -210,109 +207,124 @@ class GER(layer.Layer):
         ''' 
         self._top.receiveFromBottom(data)
 
+    def _disc(self, recvFromARQ):
+        if (recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
+            self.connConfirm()
+            self._state = self.HAND2
+            self.changeTimeoutValue(self._initialTimeout)
+            self._reloadAndEnableTimeout()
+    def _hand1(self, recvFromARQ):
+        if (recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
+            self._retries = 0
+            self.connConfirm()
+        elif (recvFromARQ[1] == self.CC and recvFromARQ[0] == self.byteGER):
+            self._state = self.CONN
+            self._retries = 0
+            self.changeTimeoutValue(self.checkInterval)
+            self._reloadAndEnableTimeout()   
+            self.connAccepted()          
+        elif (recvFromARQ[1] == self.CA and recvFromARQ[0] == self.byteGER):
+            self._state = self.CONN
+            self._retries = 0
+            self.changeTimeoutValue(self.checkInterval)
+            self._reloadAndEnableTimeout()
+
+    def _hand2(self,recvFromARQ):
+        if (recvFromARQ[1] == self.CA and recvFromARQ[0] == self.byteGER):
+            self._retries = 0
+            self._state = self.CONN
+            self.changeTimeoutValue(self.checkInterval)
+            self._reloadAndEnableTimeout()
+        elif(recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
+            self._retries = 0
+            self.disconRequest()
+            self._state = self.HALF2
+            self.changeTimeoutValue(self.checkInterval)
+            self._reloadAndEnableTimeout()
+        else:
+            self._retries = 0
+            self.notifyLayer(recvFromARQ[1:])
+            self._state = self.CONN
+            self.changeTimeoutValue(self.checkInterval)
+            self._reloadAndEnableTimeout()
+
+    def _conn(self, recvFromARQ):
+        if(recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
+            self.connConfirm()
+        elif(recvFromARQ[1] == self.KR and recvFromARQ[0] == self.byteGER):
+            self.keepAliveConfirm()
+        elif(recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
+            self.disconRequest()
+            self._state = self.HALF2
+            self.changeTimeoutValue(self.checkInterval)
+            self._reloadAndEnableTimeout()
+        else:
+            self.notifyLayer(recvFromARQ[1:])
+            self.changeTimeoutValue(self.checkInterval)
+            self._reloadAndEnableTimeout()
+
+    def _check(self, recvFromARQ):
+        if(recvFromARQ[1] == self.KR and recvFromARQ[0] == self.byteGER):
+            self.keepAliveConfirm()
+            self._retries = 0
+        elif(recvFromARQ[1] == self.KC and recvFromARQ[0] == self.byteGER):
+            self._state = self.CONN
+            self._retries = 0
+            self.changeTimeoutValue(self.checkInterval)
+            self._reloadAndEnableTimeout()
+            self._retries = 0
+        elif(recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
+            self.disconRequest()
+            self._retries = 0
+            self._state = self.HALF2
+            self.changeTimeoutValue(self.checkInterval)
+            self._reloadAndEnableTimeout()               
+        else:
+            self.notifyLayer(recvFromARQ[1:])
+            self._state = self.CONN
+            self._retries = 0
+            self.changeTimeoutValue(self.checkInterval)
+            self._reloadAndEnableTimeout()
+
+    def _reloadAndEnableTimeout(self):
+        self.reload_timeout()
+        self.enable_timeout()
+
+    def _half1(self, recvFromARQ):
+        if (recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
+            self.disconConfirm()
+            self.goToDisc()
+        elif (recvFromARQ[1] == self.KR and recvFromARQ[0] == self.byteGER):
+            self.disconRequest
+            self._retries = 0
+        else:
+            self._retries = 0
+            self.notifyLayer(recvFromARQ[1:])
+
+    def _half2(self, recvFromARQ):
+        if(recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
+            self.disconRequest()
+            self._retries = 0
+        elif (recvFromARQ[1] == self.DC):
+            self.goToDisc()
+
     def handle_fsm(self, recvFromARQ):
         ''' Recebe um quadro e faz o tratamento na máquina de estados 
             da classe
             recvFromARQ: bytearray representando o frame a ser enviado
         '''    
         if (self._state == self.DISC):
-            if (recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
-                self.connConfirm()
-                self._state = self.HAND2
-                self.enable_timeout()
-        elif (self._state == self.HAND2):
-            if (recvFromARQ[1] == self.CA and recvFromARQ[0] == self.byteGER):
-                self._retries = 0
-                self._state = self.CONN
-                self.changeTimeoutValue(self.checkInterval)
-                self.reload_timeout()   
-                self.enable_timeout()
-            elif(recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
-                self._retries = 0
-                self.disconRequest()
-                self._state = self.HALF2
-                self.changeTimeoutValue(self.checkInterval)
-                self.reload_timeout()
-                self.enable_timeout()
-            else:
-                self._retries = 0
-                self.notifyLayer(recvFromARQ[1:])
-                self._state = self.CONN
-                self.changeTimeoutValue(self.checkInterval)
-                self.reload_timeout()
-                self.enable_timeout()
+            self._disc(recvFromARQ)
         elif (self._state == self.HAND1):
-            if (recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
-                self._retries = 0
-                self.connConfirm()
-            elif (recvFromARQ[1] == self.CC and recvFromARQ[0] == self.byteGER):
-                self._state = self.CONN
-                self._retries = 0
-                self.changeTimeoutValue(self.checkInterval)
-                self.reload_timeout()   
-                self.enable_timeout()   
-                self.connAccepted()          
-            elif (recvFromARQ[1] == self.CA and recvFromARQ[0] == self.byteGER):
-                self._state = self.CONN
-                self._retries = 0
-                self.changeTimeoutValue(self.checkInterval)
-                self.reload_timeout()
-                self.enable_timeout()              
+            self._hand1(recvFromARQ)   
+        elif (self._state == self.HAND2):
+            self._hand2(recvFromARQ)           
         elif (self._state == self.CONN):
-            if(recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
-                self.connConfirm()
-            elif(recvFromARQ[1] == self.KR and recvFromARQ[0] == self.byteGER):
-                self.keepAliveConfirm()
-            elif(recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
-                self.disconRequest()
-                self._state = self.HALF2
-                self.changeTimeoutValue(self.checkInterval)
-                self.reload_timeout()
-                self.enable_timeout()
-            else:
-                self.notifyLayer(recvFromARQ[1:])
-                self.changeTimeoutValue(self.checkInterval)
-                self.reload_timeout()
-                self.enable_timeout()        
+            self._conn(recvFromARQ)       
         elif(self._state == self.CHECK):
-            if(recvFromARQ[1] == self.KR and recvFromARQ[0] == self.byteGER):
-                self.keepAliveConfirm()
-                self._retries = 0
-            elif(recvFromARQ[1] == self.KC and recvFromARQ[0] == self.byteGER):
-                self._state = self.CONN
-                self._retries = 0
-                self.changeTimeoutValue(self.checkInterval)
-                self.reload_timeout()
-                self.enable_timeout()
-                self._retries = 0
-            elif(recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
-                self.disconRequest()
-                self._retries = 0
-                self._state = self.HALF2
-                self.changeTimeoutValue(self.checkInterval)
-                self.reload_timeout()
-                self.enable_timeout()                
-            else:
-                self.notifyLayer(recvFromARQ[1:])
-                self._state = self.CONN
-                self._retries = 0
-                self.changeTimeoutValue(self.checkInterval)
-                self.reload_timeout()
-                self.enable_timeout() 
+            self._check(recvFromARQ) 
         elif (self._state == self.HALF1):
-            if (recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
-                self.disconConfirm()
-                self.goToDisc()
-            elif (recvFromARQ[1] == self.KR and recvFromARQ[0] == self.byteGER):
-                self.disconRequest
-                self._retries = 0
-            else:
-                self._retries = 0
-                self.notifyLayer(recvFromARQ[1:])
+            self._half1(recvFromARQ)
         elif (self._state == self.HALF2):
-            if(recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
-                self.disconRequest()
-                self._retries = 0
-            elif (recvFromARQ[1] == self.DC):
-                self.goToDisc()
+            self._half2(recvFromARQ)
         print("Estado atual GER:", self._state)
