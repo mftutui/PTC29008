@@ -143,10 +143,11 @@ class GER(layer.Layer):
         ''' Envia o quadro de dados para a camada inferior
             data: bytearray representando o quadro a ser enviado
         '''   
-        if(self._state == self.CONN or self._state == self.CHECK):  
-            data.insert(0, self.byteDATA)
-            data.insert(0, self._gerID)
-            self.sendToLayer(data)  
+        if(self._state == self.CONN or self._state == self.CHECK):
+            if (len(data) > 0): 
+                data.insert(0, self.byteDATA)
+                data.insert(0, self._gerID)
+                self.sendToLayer(data)  
 
     def handle(self):
         pass 
@@ -195,6 +196,7 @@ class GER(layer.Layer):
             data: bytearray representando o frame a ser transmitido
         '''  
         self._bottom.receiveFromTop(data)
+        
 
     def receiveFromBottom(self, recvFromARQ):
         ''' Recebe um quadro da camada inferior
