@@ -7,6 +7,8 @@ Layer e Protocolo
 
 import poller
 import sys
+import tun
+
 
 
 class Layer(poller.Callback):
@@ -111,10 +113,16 @@ class Protocolo():
       import arq
       import framing
       import gerencia
+      import tunlayer
+
+      self._tun = tun.Tun("tun0", "10.0.0.1", "10.0.0.2", mask="255.255.255.252", mtu=1500, qlen=4)
+      self._tun.start()
+      
       self._poller = poller.Poller()
       self._arq = arq.ARQ(None, 1)
       self._ger = gerencia.GER(None,254,10)
       self._enq = framing.Framing(serial, 1, 1024, 3)
+      self._tunLayer = tunlayer.TunLayer(self._tun, 10)
       self._fake = FakeLayer(sys.stdin, 10)
 
 
@@ -127,13 +135,13 @@ class Protocolo():
         self._arq.setBottom(self._enq)
         self._arq.setTop(self._ger)
         self._ger.setBottom(self._arq)
-        self._ger.setTop(self._fake)
-        self._fake.setBottom(self._ger)
+        self._ger.setTop(self._tunLayer)
+        self._tunLayer.setBottom(self._ger)
         self._ger.connRequest()
         self._poller.adiciona(self._enq)
         self._poller.adiciona(self._arq)
         self._poller.adiciona(self._ger)
-        self._poller.adiciona(self._fake)
+        self._poller.adiciona(self._tunLayer)
         self._poller.despache()
       except KeyboardInterrupt:
         print("enviando DR e encerrando a sessão")
