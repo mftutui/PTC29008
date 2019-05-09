@@ -74,7 +74,7 @@ além de enviar e receber quadros através desse tipo de interface'''
         '''Envia os dados para a interface tun.
            dados: buffer com os bytes a enviar (bytes ou bytearray)
            proto: número do protocolo'''
-        frame = struct.pack('!HH%dcs' % len(dados), 0, proto, dados)
+        frame = struct.pack('!HH%ds' % len(dados), 0, proto, dados)
         os.write(self.fd, frame)
 
     def get_frame(self):
