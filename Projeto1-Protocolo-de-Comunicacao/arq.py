@@ -194,9 +194,9 @@ class ARQ(layer.Layer):
         ''' 
         self._top.receiveFromBottom(data)
 
-    def handle_fsm(self, recvFromFraming):
+    def handle_fsm(self, data):
         if self._DATAN == False: 
-            if recvFromFraming[0] == self.ACK0: 
+            if data[0] == self.ACK0: 
                 self._retries = 0
                 self._DATAN = not self._DATAN
                 backoff = self.generateBackoff() 
@@ -208,7 +208,7 @@ class ARQ(layer.Layer):
                     self._state = 2
                     self.changeTimeoutValue(int(backoff*self.timeSlot))
                     self._reloadAndEnableTimeout()
-            elif recvFromFraming[0] == self.ACK1: 
+            elif data[0] == self.ACK1: 
                 backoff = self.generateBackoff()
                 if(backoff == 0):
                     self.sendDataZero()
@@ -219,7 +219,7 @@ class ARQ(layer.Layer):
                     self.changeTimeoutValue(int(backoff*self.timeSlot))
                     self._reloadAndEnableTimeout()
         elif self._DATAN == True:
-            if recvFromFraming[0] == self.ACK1:
+            if data[0] == self.ACK1:
                 self._retries = 0
                 self._DATAN = not self._DATAN
                 backoff = self.generateBackoff()
@@ -231,7 +231,7 @@ class ARQ(layer.Layer):
                     self._state = 2
                     self.changeTimeoutValue(int(backoff*self.timeSlot))
                     self._reloadAndEnableTimeout()                       
-            elif recvFromFraming[0] == self.ACK0: 
+            elif data[0] == self.ACK0: 
                 backoff = self.generateBackoff()
                 if(backoff == 0):
                     self.sendDataOne()
@@ -246,30 +246,30 @@ class ARQ(layer.Layer):
         self.reload_timeout()
         self.enable_timeout()
 
-    def receiveFromBottom(self, recvFromFraming):
-        #print("Quadro recebido no arq", recvFromFraming)
+    def receiveFromBottom(self, data):
+        #print("Quadro recebido no arq", data)
         ''' Recebe um quadro da camada inferior
-            recvFromFraming: bytearray representando o quadro recebido
+            data: bytearray representando o quadro recebido
         ''' 
-        if(recvFromFraming[1] == self._top._gerID):
-            if recvFromFraming[0] == self.DATA0:
+        if(data[1] == self._top._gerID):
+            if data[0] == self.DATA0:
 
                 if self._expDATA == False:
                     self._expDATA = True
                     self.sendACK0() 
-                    self.notifyLayer(recvFromFraming[2:])
+                    self.notifyLayer(data[2:])
                     self.disableBackoff()                    
                 elif self._expDATA == True:
                     self.sendACK0()
                     self.disableBackoff()   
-            elif recvFromFraming[0] == self.DATA1:
+            elif data[0] == self.DATA1:
                 if self._expDATA == True:
                     self._expDATA = False
                     self.sendACK1()
-                    self.notifyLayer(recvFromFraming[2:])
+                    self.notifyLayer(data[2:])
                     self.disableBackoff()                    
                 elif self._expDATA == False:
                     self.sendACK1()
                     self.disableBackoff()
             elif self._state == 1:
-                self.handle_fsm(recvFromFraming)
+                self.handle_fsm(data)
