@@ -104,39 +104,53 @@ class Protocolo():
     '''
     Classes para inicializar as camadas do protocolo
     '''
-    def __init__(self, serial):
+    def __init__(self, serial, isTun):
       ''' serial: interface serial para troca de dados
       '''
       import arq
       import framing
       import gerencia
       import tunlayer
+      import serial
+
+      self._dev = serial.Serial()
+      self._isTun = isTun
+
+      if (self._isTun == True):
+        self._tun = Tun("tun0", "10.0.0.1", "10.0.0.2", mask="255.255.255.252", mtu=1500, qlen=4)
+        self._tun.start()      
+        self._tunLayer = tunlayer.TunLayer(self._tun, 10)
+      else:
+        self._fake = FakeLayer(sys.stdin, 10)
+
       self._poller = poller.Poller()
       self._arq = arq.ARQ(None, 1)
       self._ger = gerencia.GER(None,254,10)
       self._enq = framing.Framing(serial, 1, 1024, 3)
-      self._fake = FakeLayer(sys.stdin, 10)
-      self._tun = Tun("tun0","10.0.0.1","10.0.0.2",mask="255.255.255.252",mtu=1500,qlen=4)
-      self._tun.start()
-      self._tunLayer = tunlayer.TunLayer(self._tun, 10)
 
     def start(self):
       ''' Configura as ligações das camadas e despacha os callbacks
       '''
       try:
         print ("Estabelecendo conexão...")
+        if (self._isTun == True):
+          self._tunLayer.setBottom(self._ger)
+          self._ger.setTop(self._tunLayer)
+          self._poller.adiciona(self._tunLayer)
+        else: 
+          self._fake.setBottom(self._ger)
+          self._ger.setTop(self._fake)
+          self._poller.adiciona(self._fake)
+
         self._enq.setTop(self._arq)
         self._arq.setBottom(self._enq)
         self._arq.setTop(self._ger)
         self._ger.setBottom(self._arq)
-        self._ger.setTop(self._tunLayer)
-
-        self._tunLayer.setBottom(self._ger)
         self._ger.connRequest()
         self._poller.adiciona(self._enq)
         self._poller.adiciona(self._arq)
         self._poller.adiciona(self._ger)
-        self._poller.adiciona(self._tunLayer)
+        
         self._poller.despache()
       except KeyboardInterrupt:
         print("enviando DR e encerrando a sessão")
