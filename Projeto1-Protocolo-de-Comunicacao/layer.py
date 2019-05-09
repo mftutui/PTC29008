@@ -8,6 +8,8 @@ Layer e Protocolo
 import poller
 import sys
 import tun
+import time
+import os
 
 
 
@@ -113,7 +115,7 @@ class Protocolo():
     '''
     Classes para inicializar as camadas do protocolo
     '''
-    def __init__(self, serialPath, isTun):
+    def __init__(self, serialPath, isTun, id):
       ''' serial: interface serial para troca de dados
       '''
       import arq
@@ -128,6 +130,7 @@ class Protocolo():
           self._dev = serial.Serial(serialPath)
         except:
           print("Verifique se a porta serial foi criada")
+          print()
           sys.exit(0)
        
         try:
@@ -135,10 +138,11 @@ class Protocolo():
           self._tun.start()   
         except Exception:
           print("Você deve executar o programa como root!!!")
+          print()
           sys.exit(0) 
         self._poller = poller.Poller()
         self._arq = arq.ARQ(None, 1)
-        self._ger = gerencia.GER(None,254,10)
+        self._ger = gerencia.GER(None,id,10)
         self._enq = framing.Framing(self._dev, 1, 1024, 3)
         self._tunLayer = tunlayer.TunLayer(self._tun, 10)
         
@@ -148,13 +152,30 @@ class Protocolo():
           self._dev = serial.Serial(serialPath)
         except:
           print("Verifique se a porta serial foi criada")
+          print()
           sys.exit(0)
         self._poller = poller.Poller()
         self._arq = arq.ARQ(None, 1)
-        self._ger = gerencia.GER(None,254,10)
+        self._ger = gerencia.GER(None,id,10)
         self._enq = framing.Framing(self._dev, 1, 1024, 3)
         #self._tunLayer = tunlayer.TunLayer(self._tun, 10)
         self._fake = FakeLayer(sys.stdin, 10)    
+
+
+
+    def loadingBar(self, times):
+      buffer = []
+      repeat = 0
+
+      while repeat < times:
+        for i in range(repeat):
+          buffer.append('%')
+        os.system('clear')
+        buf = ''.join(buffer)
+        print(buf)
+        time.sleep(0.2)
+        repeat = repeat + 1;
+
 
 
 
@@ -192,9 +213,15 @@ class Protocolo():
           self._poller.despache()
               
       except KeyboardInterrupt:
-        print("enviando DR e encerrando a sessão")
+        os.system('clear')
         self._ger.disconRequest() 
         self._ger._state = self._ger.HALF1
+        self.loadingBar(10)
+
+        os.system('clear')
+        print('Desconectado')
+        print()
+        sys.exit(0)
     
   
     

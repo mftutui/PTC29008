@@ -7,7 +7,7 @@
 
 import layer
 import sys
-
+import os
 class GER(layer.Layer):
     '''
     Classe responsável por estabelecer, manter e finalizar
@@ -47,6 +47,7 @@ class GER(layer.Layer):
         self._state = self.DISC
         self._initialTimeout = timeout
         self._retries = 0
+        self._isConn = False
     
     def changeTimeoutValue(self, timeout):
         ''' Altera o valor do timeout do objeto
@@ -160,7 +161,9 @@ class GER(layer.Layer):
         self._retries = 0
         self.changeTimeoutValue(self._initialTimeout)
         self._reloadAndEnableTimeout()
-        print ("Estado GER", self._state) 
+        self._isConn = False
+        os.system('clear')
+        print("Verifique se a outra estação está ativa")
 
     def handle_timeout(self):
         ''' Trata a interrupção interna devido ao timeout
@@ -172,7 +175,6 @@ class GER(layer.Layer):
             else:
                 self.goToDisc()
         elif(self._state == self.HAND2):
-            print ("Erro hand2")
             self.goToDisc()        
         elif(self._state == self.CONN):
             self.keepAliveRequest()         
@@ -274,7 +276,6 @@ class GER(layer.Layer):
     def _check(self, data):
         if(data[1] == self.KR and data[0] == self.byteGER):
             self.keepAliveConfirm()
-            self._retries = 0
         elif(data[1] == self.KC and data[0] == self.byteGER):
             self._state = self.CONN
             self._retries = 0
@@ -312,7 +313,7 @@ class GER(layer.Layer):
             self.goToDisc()
 
     def handle_fsm(self, data):
-        #print("Quadro recebido no gerenciamento", data)
+
       
         ''' Recebe um quadro e faz o tratamento na máquina de estados 
             da classe
@@ -332,4 +333,7 @@ class GER(layer.Layer):
             self._half1(data)
         elif (self._state == self.HALF2):
             self._half2(data)
-        print("Estado atual GER:", self._state)
+        if(self._state == self.CONN and self._isConn == False):
+            os.system('clear')
+            print("Estação pronta para troca de dados")
+            self._isConn = True

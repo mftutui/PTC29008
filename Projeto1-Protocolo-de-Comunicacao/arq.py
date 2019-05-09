@@ -16,10 +16,10 @@ class ARQ(layer.Layer):
     Classe responsável por garantir a entrega de quadros
     e controlar o acesso ao meio
     '''
-    ACK0  = 0x80
-    ACK1  = 0x88
-    DATA0 = 0x00
-    DATA1 = 0x08
+    ACK0  = 0x00
+    ACK1  = 0x08
+    DATA0 = 0x80
+    DATA1 = 0x88
     bytePROTOCOL = 0x00
     timeSlot = .1
 
@@ -133,9 +133,6 @@ class ARQ(layer.Layer):
             else:
                 self._retries = 0 
                 self._state = 0
-                #self._DATAN = False
-                #self._expDATA = False
-                print ("Erro arq")
                 self._top.notifyError()
                 self.changeTimeoutValue(self._initialTimeout)
                 self.disable_timeout()
