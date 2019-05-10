@@ -5,8 +5,7 @@
     ARQ 
 '''
 
-import sys
-import poller
+
 import layer
 import random
 
@@ -20,7 +19,6 @@ class ARQ(layer.Layer):
     ACK1  = 0x08
     DATA0 = 0x80
     DATA1 = 0x88
-    bytePROTOCOL = 0x00
     timeSlot = .1
 
     def __init__(self, fd, timeout):

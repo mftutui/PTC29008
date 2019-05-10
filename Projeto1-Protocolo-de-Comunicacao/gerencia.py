@@ -6,7 +6,6 @@
 '''
 
 import layer
-import sys
 import os
 class GER(layer.Layer):
     '''

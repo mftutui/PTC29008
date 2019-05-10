@@ -1,6 +1,5 @@
-import serial
 import sys
-import layer
+import protocolo
 import os
 
 if __name__ == '__main__':
@@ -21,7 +20,7 @@ if __name__ == '__main__':
         print("###################################################################")
         print()
         sys.exit(0)
-    #dev = serial.Serial(sys.argv[1])
+
     serialPath = ""
     isTun = True
     id = 254
@@ -61,5 +60,5 @@ if __name__ == '__main__':
         if sys.argv[i] == "--fakeLayer":
             isTun = False
     
-    proto = layer.Protocolo(serialPath,isTun, id)
+    proto = protocolo.PPP(serialPath,isTun,id)
     proto.start()

@@ -2,16 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import layer
-import sys
-import time
 import tun
 
 class TunLayer(layer.Layer):
-    def __init__(self, tun, timeout):
+    def __init__(self, tunobj, timeout):
         self.timeout = timeout
         self.base_timeout = timeout
-        self.fd = tun.fd
-        self._tun = tun
+        self.fd = tunobj.fd
+        self._tun = tunobj
         self._top = None
         self._bottom = None
         self.disable_timeout()
@@ -44,10 +42,11 @@ class TunLayer(layer.Layer):
         self._bottom.receiveFromTop(data)
 
     def notifyLayer(self, data):
-        pass
+        lenProto = data[0]
+        proto = int(data[1:lenProto + 1].decode('ascii'), 16)
+        payload = data[lenProto + 1:]
+        self._tun.send_frame(payload, proto)
 
     def receiveFromBottom(self, data):
-       lenProto = data[0]
-       proto = int(data[1:lenProto+1].decode('ascii'), 16) 
-       payload = data[lenProto+1:]
-       self._tun.send_frame(payload, proto)
+        self.notifyLayer(data)
+
