@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*- 
 
-'''
-    Enquadramento
-'''
+__author__ = "Paulo Sell e Maria Fernanda Tutui"
 
 import layer
 import crc
@@ -37,11 +35,6 @@ class Framing(layer.Layer):
         self._top = None
         self.enable()
 
-    def setTop(self, top):
-        ''' Método para definir camada superior do enquadramento
-            top: objeto da camada superior
-        '''
-        self._top = top
 
     def handle(self):
         ''' Trata o evento de recebimento de bytes pela interface serial  
@@ -123,9 +116,6 @@ class Framing(layer.Layer):
             self._crc.clear()
             self._crc.update(self._received)
             if self._crc.check_crc():
-                # if(self._received[0] == 0x80):
-                #     print(self._received[2], self._received[3])
-
                 self.notifyLayer(self._received[:self._datasize-2])
             self.disable_timeout()
             self._state = self.idle          

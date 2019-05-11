@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*- 
 
-'''
-    Gerenciamento de sessão
-'''
+
+__author__ = "Paulo Sell e Maria Fernanda Tutui"
 
 import layer
 import os
+
 class GER(layer.Layer):
     '''
     Classe responsável por estabelecer, manter e finalizar
@@ -122,17 +122,6 @@ class GER(layer.Layer):
         frameToBeSent.append(self.CA)
         self.sendToLayer(frameToBeSent) 
 
-    def setBottom(self, bottom):
-        ''' Método para definir camada inferior da classe arq
-            bottom: objeto da camada inferior
-        '''
-        self._bottom = bottom
-
-    def setTop(self, top):
-        ''' Método para definir camada superior da classe arq
-            top: objeto da camada superior
-        '''
-        self._top = top
 
     def notifyError(self):
         ''' Método que indica que houve erro fatal na comunicação
@@ -311,9 +300,7 @@ class GER(layer.Layer):
         elif (data[1] == self.DC):
             self.goToDisc()
 
-    def handle_fsm(self, data):
-
-      
+    def handle_fsm(self, data):      
         ''' Recebe um quadro e faz o tratamento na máquina de estados 
             da classe
             data: bytearray representando o frame a ser enviado

@@ -20,11 +20,13 @@ import serial
 
 class PPP():
     '''
-    Classes para inicializar as camadas do protocolo
+    Classe para inicializar as camadas do protocolo e iniciar troca de dados
     '''
 
     def __init__(self, serialPath, isTun, id):
-        ''' serial: interface serial para troca de dados
+        ''' serialPath: interface serial para troca de dados
+            isTun: boolean que indica se será utilizada a interface tun
+            id: identificação da sessão a ser estabelecida
         '''
         self._isTun = isTun
         if (self._isTun == True):
@@ -46,9 +48,7 @@ class PPP():
             self._arq = arq.ARQ(None, 1)
             self._ger = gerencia.GER(None, id, 10)
             self._enq = framing.Framing(self._dev, 1, 1024, 3)
-            self._tunLayer = tunlayer.TunLayer(self._tun, 10)
-
-            # self._fake = FakeLayer(sys.stdin, 10)
+            self._tunLayer = tunlayer.TunLayer(self._tun)
         else:
             try:
                 self._dev = serial.Serial(serialPath)
@@ -60,10 +60,13 @@ class PPP():
             self._arq = arq.ARQ(None, 1)
             self._ger = gerencia.GER(None, id, 10)
             self._enq = framing.Framing(self._dev, 1, 1024, 3)
-            # self._tunLayer = tunlayer.TunLayer(self._tun, 10)
             self._fake = fakelayer.FakeLayer(sys.stdin, 10)
 
     def loadingBar(self, times):
+        '''
+            Imprime uma barra de carregamento na tela
+            times: tamanho da barra
+        '''
         buffer = []
         repeat = 0
 

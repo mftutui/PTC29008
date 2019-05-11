@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*- 
 
-'''
-    ARQ 
-'''
 
+
+__author__ = "Paulo Sell e Maria Fernanda Tutui"
 
 import layer
 import random
@@ -14,7 +13,9 @@ class ARQ(layer.Layer):
     '''
     Classe responsável por garantir a entrega de quadros
     e controlar o acesso ao meio
+    
     '''
+
     ACK0  = 0x00
     ACK1  = 0x08
     DATA0 = 0x80
@@ -74,23 +75,11 @@ class ARQ(layer.Layer):
             frameToBeSent.insert(0,self.DATA1)
         self.sendToLayer(frameToBeSent)  
 
-    def setTop(self, top):
-        ''' Método para definir camada superior da classe arq
-            top: objeto da camada superior
-        '''
-        self._top = top
-
-    def setBottom(self, bottom):
-        ''' Método para definir camada inferior da classe arq
-            bottom: objeto da camada inferior
-        '''
-        self._bottom = bottom
 
     def sendToLayer(self, frameToBeSent):
         ''' Envia o frame a ser transmitido para a camada inferior
             frameToBeSent: bytearray representando o frame a ser transmitido
         '''  
-        #print("Quadro sendo enviado pelo ARQ", frameToBeSent)
         self._bottom.receiveFromTop(frameToBeSent)       
 
     def receiveFromTop(self, data):
@@ -242,7 +231,6 @@ class ARQ(layer.Layer):
         self.enable_timeout()
 
     def receiveFromBottom(self, data):
-        #print("Quadro recebido no arq", data)
         ''' Recebe um quadro da camada inferior
             data: bytearray representando o quadro recebido
         ''' 

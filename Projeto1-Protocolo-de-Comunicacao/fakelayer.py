@@ -1,3 +1,10 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*- 
+
+
+
+__author__ = "Paulo Sell e Maria Fernanda Tutui"
+
 import sys
 import layer
 
@@ -5,7 +12,6 @@ class FakeLayer(layer.Layer):
     '''
       Classe para receber dados do teclado e transmiti-los
     '''
-
     def __init__(self, fd, timeout):
         ''' fd: descritor de arquivos sys.stdin
             timeout: timeout: intervalo de tempo para interrupção interna
@@ -30,7 +36,7 @@ class FakeLayer(layer.Layer):
         print(data.decode('ascii'))
 
     def handle(self):
-        ''' Trata o evento de recebimento de bytes pela interface serial
+        ''' Trata o evento de recebimento de bytes pelo teclado
         '''
         frame = sys.stdin.readline()
         frameToBeSent = bytearray()
@@ -50,14 +56,3 @@ class FakeLayer(layer.Layer):
         '''
         pass
 
-    def setTop(self, top):
-        ''' Método para definir camada superior da classe arq
-            top: objeto da camada superior
-        '''
-        self._top = top
-
-    def setBottom(self, bottom):
-        ''' Método para definir camada inferior da classe arq
-            bottom: objeto da camada inferior
-        '''
-        self._bottom = bottom
