@@ -1,12 +1,11 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*- 
 
-'''
-    Gerenciamento de sessão
-'''
+
+__author__ = "Paulo Sell e Maria Fernanda Tutui"
 
 import layer
-import sys
+import os
 
 class GER(layer.Layer):
     '''
@@ -47,6 +46,7 @@ class GER(layer.Layer):
         self._state = self.DISC
         self._initialTimeout = timeout
         self._retries = 0
+        self._isConn = False
     
     def changeTimeoutValue(self, timeout):
         ''' Altera o valor do timeout do objeto
@@ -122,17 +122,6 @@ class GER(layer.Layer):
         frameToBeSent.append(self.CA)
         self.sendToLayer(frameToBeSent) 
 
-    def setBottom(self, bottom):
-        ''' Método para definir camada inferior da classe arq
-            bottom: objeto da camada inferior
-        '''
-        self._bottom = bottom
-
-    def setTop(self, top):
-        ''' Método para definir camada superior da classe arq
-            top: objeto da camada superior
-        '''
-        self._top = top
 
     def notifyError(self):
         ''' Método que indica que houve erro fatal na comunicação
@@ -143,10 +132,11 @@ class GER(layer.Layer):
         ''' Envia o quadro de dados para a camada inferior
             data: bytearray representando o quadro a ser enviado
         '''   
-        if(self._state == self.CONN or self._state == self.CHECK):  
-            data.insert(0, self.byteDATA)
-            data.insert(0, self._gerID)
-            self.sendToLayer(data)  
+        if(self._state == self.CONN or self._state == self.CHECK):
+            if (len(data) > 0):  
+                data.insert(0, self.byteDATA)
+                data.insert(0, self._gerID)
+                self.sendToLayer(data)  
 
     def handle(self):
         pass 
@@ -159,7 +149,9 @@ class GER(layer.Layer):
         self._retries = 0
         self.changeTimeoutValue(self._initialTimeout)
         self._reloadAndEnableTimeout()
-        print ("Estado GER", self._state) 
+        self._isConn = False
+        os.system('clear')
+        print("Verifique se a outra estação está ativa")
 
     def handle_timeout(self):
         ''' Trata a interrupção interna devido ao timeout
@@ -171,7 +163,6 @@ class GER(layer.Layer):
             else:
                 self.goToDisc()
         elif(self._state == self.HAND2):
-            print ("Erro hand2")
             self.goToDisc()        
         elif(self._state == self.CONN):
             self.keepAliveRequest()         
@@ -193,14 +184,14 @@ class GER(layer.Layer):
     def sendToLayer(self, data):
         ''' Envia o frame a ser transmitido para a camada inferior
             data: bytearray representando o frame a ser transmitido
-        '''  
+        ''' 
         self._bottom.receiveFromTop(data)
 
-    def receiveFromBottom(self, recvFromARQ):
+    def receiveFromBottom(self, data):
         ''' Recebe um quadro da camada inferior
-            recvFromARQ: bytearray representando o quadro recebido
+            data: bytearray representando o quadro recebido
         ''' 
-        self.handle_fsm(recvFromARQ)
+        self.handle_fsm(data)
 
     def notifyLayer(self, data):
         ''' Envia o frame recebido para a camada superior
@@ -212,37 +203,37 @@ class GER(layer.Layer):
         self.reload_timeout()
         self.enable_timeout()
 
-    def _disc(self, recvFromARQ):
-        if (recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
+    def _disc(self, data):
+        if (data[1] == self.CR and data[0] == self.byteGER):
             self.connConfirm()
             self._state = self.HAND2
             self.changeTimeoutValue(self._initialTimeout)
             self._reloadAndEnableTimeout()
 
-    def _hand1(self, recvFromARQ):
-        if (recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
+    def _hand1(self, data):
+        if (data[1] == self.CR and data[0] == self.byteGER):
             self._retries = 0
             self.connConfirm()
-        elif (recvFromARQ[1] == self.CC and recvFromARQ[0] == self.byteGER):
+        elif (data[1] == self.CC and data[0] == self.byteGER):
             self._state = self.CONN
             self._retries = 0
             #self._botton._state = 0
             self.connAccepted()
             self.changeTimeoutValue(self.checkInterval)
             self._reloadAndEnableTimeout()            
-        elif (recvFromARQ[1] == self.CA and recvFromARQ[0] == self.byteGER):
+        elif (data[1] == self.CA and data[0] == self.byteGER):
             self._state = self.CONN
             self._retries = 0
             self.changeTimeoutValue(self.checkInterval)
             self._reloadAndEnableTimeout()
 
-    def _hand2(self,recvFromARQ):
-        if (recvFromARQ[1] == self.CA and recvFromARQ[0] == self.byteGER):
+    def _hand2(self,data):
+        if (data[1] == self.CA and data[0] == self.byteGER):
             self._retries = 0
             self._state = self.CONN
             self.changeTimeoutValue(self.checkInterval)
             self._reloadAndEnableTimeout()
-        elif(recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
+        elif(data[1] == self.DR and data[0] == self.byteGER):
             self._retries = 0
             self.disconRequest()
             self._state = self.HALF2
@@ -250,85 +241,85 @@ class GER(layer.Layer):
             self._reloadAndEnableTimeout()
         else:
             self._retries = 0
-            self.notifyLayer(recvFromARQ[1:])
+            self.notifyLayer(data[1:])
             self._state = self.CONN
             self.changeTimeoutValue(self.checkInterval)
             self._reloadAndEnableTimeout()
 
-    def _conn(self, recvFromARQ):
-        if(recvFromARQ[1] == self.CR and recvFromARQ[0] == self.byteGER):
+    def _conn(self, data):
+        if(data[1] == self.CR and data[0] == self.byteGER):
             self.connConfirm()
-        elif(recvFromARQ[1] == self.KR and recvFromARQ[0] == self.byteGER):
+        elif(data[1] == self.KR and data[0] == self.byteGER):
             self.keepAliveConfirm()
-        elif(recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
+        elif(data[1] == self.DR and data[0] == self.byteGER):
             self.disconRequest()
             self._state = self.HALF2
             self.changeTimeoutValue(self.checkInterval)
             self._reloadAndEnableTimeout()
         else:
-            self.notifyLayer(recvFromARQ[1:])
+            self.notifyLayer(data[1:])
             self.changeTimeoutValue(self.checkInterval)
             self._reloadAndEnableTimeout()
 
-    def _check(self, recvFromARQ):
-        if(recvFromARQ[1] == self.KR and recvFromARQ[0] == self.byteGER):
+    def _check(self, data):
+        if(data[1] == self.KR and data[0] == self.byteGER):
             self.keepAliveConfirm()
-            self._retries = 0
-        elif(recvFromARQ[1] == self.KC and recvFromARQ[0] == self.byteGER):
+        elif(data[1] == self.KC and data[0] == self.byteGER):
             self._state = self.CONN
             self._retries = 0
             self.changeTimeoutValue(self.checkInterval)
             self._reloadAndEnableTimeout()
-        elif(recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
+        elif(data[1] == self.DR and data[0] == self.byteGER):
             self.disconRequest()
             self._retries = 0
             self._state = self.HALF2
             self.changeTimeoutValue(self.checkInterval)
             self._reloadAndEnableTimeout()               
         else:
-            self.notifyLayer(recvFromARQ[1:])
+            self.notifyLayer(data[1:])
             self._state = self.CONN
             self._retries = 0
             self.changeTimeoutValue(self.checkInterval)
             self._reloadAndEnableTimeout()
 
-    def _half1(self, recvFromARQ):
-        if (recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
+    def _half1(self, data):
+        if (data[1] == self.DR and data[0] == self.byteGER):
             self.disconConfirm()
             self.goToDisc()
-        elif (recvFromARQ[1] == self.KR and recvFromARQ[0] == self.byteGER):
+        elif (data[1] == self.KR and data[0] == self.byteGER):
             self.disconRequest
             self._retries = 0
         else:
             self._retries = 0
-            self.notifyLayer(recvFromARQ[1:])
+            self.notifyLayer(data[1:])
 
-    def _half2(self, recvFromARQ):
-        if(recvFromARQ[1] == self.DR and recvFromARQ[0] == self.byteGER):
+    def _half2(self, data):
+        if(data[1] == self.DR and data[0] == self.byteGER):
             self.disconRequest()
             self._retries = 0
-        elif (recvFromARQ[1] == self.DC):
+        elif (data[1] == self.DC):
             self.goToDisc()
 
-    def handle_fsm(self, recvFromARQ):
-        #print("Quadro recebido no gerenciamento", recvFromARQ)
-      
+    def handle_fsm(self, data):      
         ''' Recebe um quadro e faz o tratamento na máquina de estados 
             da classe
-            recvFromARQ: bytearray representando o frame a ser enviado
+            data: bytearray representando o frame a ser enviado
         '''    
         if (self._state == self.DISC):
-            self._disc(recvFromARQ)
+            self._disc(data)
         elif (self._state == self.HAND1):
-            self._hand1(recvFromARQ)   
+            self._hand1(data)   
         elif (self._state == self.HAND2):
-            self._hand2(recvFromARQ)           
+            self._hand2(data)           
         elif (self._state == self.CONN):
-            self._conn(recvFromARQ)       
+            self._conn(data)       
         elif(self._state == self.CHECK):
-            self._check(recvFromARQ) 
+            self._check(data) 
         elif (self._state == self.HALF1):
-            self._half1(recvFromARQ)
+            self._half1(data)
         elif (self._state == self.HALF2):
-            self._half2(recvFromARQ)
-        print("Estado atual GER:", self._state)
+            self._half2(data)
+        if(self._state == self.CONN and self._isConn == False):
+            os.system('clear')
+            print("Estação pronta para troca de dados")
+            self._isConn = True

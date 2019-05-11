@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*- 
 
-'''
-    Enquadramento
-'''
+__author__ = "Paulo Sell e Maria Fernanda Tutui"
 
 import layer
 import crc
@@ -27,7 +25,7 @@ class Framing(layer.Layer):
         self._bytes_max = bytes_max
         self._state = self.idle
         self._dev = dev
-        self._framesize = 0
+        self._datasize = 0
         self._received = bytearray()
         self.fd = dev
         self.timeout = timeout
@@ -37,11 +35,6 @@ class Framing(layer.Layer):
         self._top = None
         self.enable()
 
-    def setTop(self, top):
-        ''' Método para definir camada superior do enquadramento
-            top: objeto da camada superior
-        '''
-        self._top = top
 
     def handle(self):
         ''' Trata o evento de recebimento de bytes pela interface serial  
@@ -55,12 +48,12 @@ class Framing(layer.Layer):
         print('Timeout Framing!')
         self.handle_fsm(None)
         
-    def receiveFromTop(self, frame):
+    def receiveFromTop(self, data):
         ''' Envia o quadro de dados pela interface serial
-            frame: bytearray representando o quadro a ser enviado
+            data: bytearray representando o quadro a ser enviado
         '''         
         self._crc.clear()
-        self._crc.update(frame)
+        self._crc.update(data)
         msg = self._crc.gen_crc()
         self._dev.write(b'~')    
         for i in range (len(msg)):
@@ -95,9 +88,9 @@ class Framing(layer.Layer):
         '''        
         if byte is None:
             self._received.clear()
-            self._framesize = 0
+            self._datasize = 0
             self.disable_timeout()            
-        elif((byte == b'~') and (self._framesize == 0)):
+        elif((byte == b'~') and (self._datasize == 0)):
             self._state = self.rx       
             self.enable_timeout()
         else:
@@ -105,8 +98,8 @@ class Framing(layer.Layer):
             self.disable_timeout()
 
     def notifyLayer(self, data):
-        ''' Envia o frame recebido para a camada superior
-            data: bytearray representando o frame recebido
+        ''' Envia o data recebido para a camada superior
+            data: bytearray representando o data recebido
         '''
         self._top.receiveFromBottom(data)
 
@@ -114,30 +107,27 @@ class Framing(layer.Layer):
         ''' Trata o byte quando a máquina de estados está no estado rx
             byte: byte recebido pela interface serial
         '''              
-        if (self._framesize > self._bytes_max):
+        if (self._datasize > self._bytes_max):
             self.disable_timeout()
             self._state = self.idle
-            self._framesize = 0
+            self._datasize = 0
             self._received.clear()
-        elif(byte == b'~' and self._framesize >= self._bytes_min):            
+        elif(byte == b'~' and self._datasize >= self._bytes_min):            
             self._crc.clear()
             self._crc.update(self._received)
             if self._crc.check_crc():
-                # if(self._received[0] == 0x80):
-                #     print(self._received[2], self._received[3])
-
-                self.notifyLayer(self._received[:self._framesize-2])
+                self.notifyLayer(self._received[:self._datasize-2])
             self.disable_timeout()
             self._state = self.idle          
-            self._framesize = 0            
+            self._datasize = 0            
             self._received.clear()            
         elif(byte == b'}'):
             self._state = self.esc
-        elif(byte == b'~' and self._framesize == 0):
+        elif(byte == b'~' and self._datasize == 0):
             self._state = self.rx
         elif (byte != b'~' or byte != b'}'):            
             self._received.append(int.from_bytes(byte, 'big'))
-            self._framesize = self._framesize+1
+            self._datasize = self._datasize+1
 
     def _esc(self, byte):
         ''' Trata o byte quando a máquina de estados está no estado rx
@@ -145,15 +135,15 @@ class Framing(layer.Layer):
         '''
         if(byte == b'~' or byte == b'}'):
            self._received.clear()
-           self._framesize = 0
+           self._datasize = 0
            self._state = self.idle
            self.disable_timeout()
         elif(byte == b'^'):
            self._received.append(int.from_bytes(b'~', 'big'))
-           self._framesize = self._framesize + 1
+           self._datasize = self._datasize + 1
            self._state = self.rx
         elif(byte == b']'):
            self._received.append(int.from_bytes(b'}', 'big'))
-           self._framesize = self._framesize + 1
+           self._datasize = self._datasize + 1
            self._state = self.rx
 
