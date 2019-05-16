@@ -34,7 +34,7 @@ De acordo com as especificações adotadas a partir das [discussões em sala de 
 
 #### Mensagens de controle
 
-![mensagens_de_controle]()
+![mensagens_de_controle](https://github.com/mftutui/PTC29008/blob/master/Projeto1-Protocolo-de-Comunicacao/imagens/mensagens_de_controle.png)
 
 Ex: A partir da definição do byte de identificação de mensagens da camada de gerenciamento de sessão chamado ID *PAYLOAD* como 255, ou 11111111 em binário e mensagens não destinadas a esta camada identificadas com 0, ou 00000000 em binário.
 
@@ -46,6 +46,6 @@ Um quadro da camada se sessão enviando uma mensagem de confirmação seria:
 
 #### Quadro para garantia de entrega
 
-![garantia_de_entrega](https://github.com/mftutui/PTC29008/blob/master/Projeto1-Protocolo-de-Comunicacao/imagens/garantia_entrega.png)
+![garantia_de_entrega](https://github.com/mftutui/PTC29008/blob/master/Projeto1-Protocolo-de-Comunicacao/imagens/grantia_de_entrega.png)
 
 📗 Mais informações podem ser encontradas no [relatório completo](https://github.com/mftutui/PTC29008/blob/master/Projeto1-Protocolo-de-Comunicacao/RELATORIO1_PTC29008.pdf) ou no link [http://protocoloptc.ddnsking.com/](http://protocoloptc.ddnsking.com).
