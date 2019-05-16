@@ -22,7 +22,7 @@ Protocolo destinado a estabelecer enlaces ponto-a-ponto entre computadores.
 De acordo com as especificações adotadas a partir das [discussões em sala de aula](https://wiki.sj.ifsc.edu.br/wiki/index.php/PTC29008:_Projeto_1:_um_protocolo_de_comunica%C3%A7%C3%A3o), o protocolo segue o seguinte padrão:
 
 ### Formato de quadro do protocolo
-![formato_de_quadro](https://github.com/mftutui/PTC29008/blob/master/Projeto1-Protocolo-de-Comunicacao/imagens/formato_de_quadro.png)
+![formato_de_quadro](https://github.com/mftutui/PTC29008/blob/master/Projeto1-Protocolo-de-Comunicacao/imagens/formato_do_quadro.png)
 
 ### Gerenciamento de sessão
 
