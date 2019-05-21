@@ -4,6 +4,8 @@ Este repositório contém os projetos realizados durante a disciplina de Projeto
 
 ## Descrição dos projetos:
 
-* [chat-multi-client-sockets](https://github.com/mftutui/PTC29008/tree/master/chat-multi-client-sockets): Protocolo para bate-papo
+* [chat-multi-client-sockets](https://github.com/mftutui/PTC29008/tree/master/chat-multi-client-sockets): Protocolo para bate-papo.
 
-* [Projeto1-Protocolo-de-Comunicacao](https://github.com/mftutui/PTC29008/tree/master/Projeto1-Protocolo-de-Comunicacao): Protocolo destinado a estabelecer enlaces ponto-a-ponto entre computadores
+* [Projeto1-Protocolo-de-Comunicacao](https://github.com/mftutui/PTC29008/tree/master/Projeto1-Protocolo-de-Comunicacao): Protocolo destinado a estabelecer enlaces ponto-a-ponto entre computadores.
+
+* [Projeto2-Protocolo-de-Aplicacao](https://github.com/mftutui/PTC29008/tree/master/Projeto2-Protocolo-de-Aplicacao): Protocolo com a finalidade de efetuar intercâmbio de dados entre aplicações específicas.
