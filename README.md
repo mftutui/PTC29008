@@ -1,4 +1,4 @@
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)]
+![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)
 
 # PTC29008 - Projeto de Protocolos
 
