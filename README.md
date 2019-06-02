@@ -10,4 +10,4 @@ Este repositório contém os projetos realizados durante a disciplina de Projeto
 
 * [Projeto2-Protocolo-de-Aplicacao](https://github.com/mftutui/PTC29008/tree/master/Projeto2-Protocolo-de-Aplicacao): Protocolo com a finalidade de efetuar intercâmbio de dados entre aplicações específicas.
 
-Autores: [Paulo Sell](https://github.com/paulosell) [Maria Fernanda Tutui](https://github.com/mftutui)
+Autores: [Paulo Sell](https://github.com/paulosell) e [Maria Fernanda Tutui](https://github.com/mftutui)
