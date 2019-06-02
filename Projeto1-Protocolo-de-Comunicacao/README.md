@@ -50,4 +50,4 @@ Um quadro da camada se sessão enviando uma mensagem de confirmação seria:
 
 📗 Mais informações podem ser encontradas no [relatório completo](https://github.com/mftutui/PTC29008/blob/master/Projeto1-Protocolo-de-Comunicacao/RELATORIO1_PTC29008.pdf) ou no link [http://protocoloptc.ddnsking.com/](http://protocoloptc.ddnsking.com).
 
-Autores: [Paulo Sell](https://github.com/paulosell) [Maria Fernanda Tutui](https://github.com/mftutui)
+Autores: [Paulo Sell](https://github.com/paulosell) e [Maria Fernanda Tutui](https://github.com/mftutui)
