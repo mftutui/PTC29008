@@ -1,3 +1,5 @@
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)]
+
 # PTC29008 - Projeto de Protocolos
 
 Este repositório contém os projetos realizados durante a disciplina de Projeto de Protocolos do curso de Engenharia de Telecomunicações do IFSC - Campus São José.
